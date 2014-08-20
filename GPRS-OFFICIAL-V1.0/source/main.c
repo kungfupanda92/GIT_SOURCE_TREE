@@ -14,6 +14,12 @@ int main(void) {
 	gpio_config();
 	initUart0(1200); 	//Initialize Uart0
 	initUart1(9600);	//Initialize Uart1
+	
+	//start debug
+		errase_day_old();
+	while(1);
+	
+	//end debug
 	//--------------------------------
 	init_Watchdog();	//Init & Start WDT - TimeOut ~= 310 Second
 	//--------------------------------

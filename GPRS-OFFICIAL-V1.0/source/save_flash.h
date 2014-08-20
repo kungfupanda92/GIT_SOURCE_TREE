@@ -15,4 +15,10 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff);
 
 uint8_t check_id(void);
 
+uint32_t errase_day_old(void);
+
+uint8_t compare_date(_RTC_time day1, _RTC_time day2);
+
+uint8_t check_day_ok(unsigned long add_day);
+
 #endif /*SAVE_FLASH_H_*/

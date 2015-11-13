@@ -7,8 +7,6 @@
 
 void check_int_min(void);
 
-void test_save(void);
-
 void freeze_frame(void);
 
 uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff);

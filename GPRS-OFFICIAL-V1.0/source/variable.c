@@ -42,7 +42,7 @@ _rtc_flag rtc_flag;
 __attribute ((aligned(32))) char my_bl_data[256];
 //-------------------------------------------------------------------------------------------------
 _freeze_data free_data;
-unsigned char half_hour;
+unsigned int half_hour;
 char freeze_code[] =
 		"A08E10901190129013901490109180A011B612B613B621B622B623B630B631B632B633B640B641B642B643B650B651B652B653B610A060B60E302090209110B011A011B012A012B013A013B014A014B0";
 

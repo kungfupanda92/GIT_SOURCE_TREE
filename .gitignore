@@ -2,12 +2,12 @@ GPRS-OFFICIAL-V1.0/lst/
 GPRS-OFFICIAL-V1.0/obj/
 
 #keil C
-.plg
-.User
-.bak
-.uvopt
-.uvproj
-.dep
+#.plg
+#.User
+#.bak
+#.uvopt
+#.uvproj
+#.dep
 
 # Object files
 *.o

@@ -1,5 +1,6 @@
 #include "rtc.h"
 //--------------------------------------------------------------------------------------
+extern unsigned char half_hour;
 extern _rtc_flag rtc_flag;
 extern _RTC_time set_time, current_time;
 //--------------------------------------------------------------------------------------
@@ -7,7 +8,14 @@ __irq void RTCHandler(void) {
 	if (ILR & ILR_RTCCIF) {	//interrupt counter
 		ILR |= ILR_RTCCIF; /* clear interrupt flag */
 		/* interrupt counter minute */
+	if(MIN==0 | MIN==30){
 		rtc_flag.bits.counter_minute = 1;
+		if(MIN==0) 
+			half_hour=0;
+		else
+			half_hour=1;
+	}
+		
 	}
 
 	if (ILR & ILR_RTCALF) {	//interrupt alarm
@@ -23,7 +31,7 @@ void RTC_init(void) {
 	//RTC_SetAlarmMask(~AMRSEC);
 	//ALSEC=3;	//set Alarm register interrupt
 	/*-----------------------*/
-	CIIR |= CIIR_HOUR;	//set Counter interrupt
+	CIIR |= CIIR_MIN;	//set Counter interrupt
 	//---------------------------
 	CCR = 2;
 	CCR = 0;

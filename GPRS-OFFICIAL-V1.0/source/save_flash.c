@@ -2,6 +2,7 @@
 #include "main.h"
 #include "iap.h"
 //#define DEBUG_SAVE_FLASH ;
+extern unsigned char half_hour;
 extern char buffer_frezze[];
 extern _rtc_flag rtc_flag;
 extern char freeze_code[];
@@ -19,9 +20,6 @@ void check_int_min(void) {
 	if (rtc_flag.bits.counter_minute == 0)
 		return;
 	rtc_flag.bits.counter_minute = 0;
-//	#ifdef DEBUG_SAVE_FLASH
-//		printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
-//	#endif
 
 	freeze_frame();
 }
@@ -97,7 +95,6 @@ uint32_t check_sector_current(void) {
 		}
 		 return 0x5800;
    }
-	
 
 	iap_Erase_sector(1, 3);
 	return 0x001000;

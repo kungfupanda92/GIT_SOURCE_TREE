@@ -1,29 +1,37 @@
 #include "rtc.h"
 //--------------------------------------------------------------------------------------
+extern unsigned int half_hour;
 extern _rtc_flag rtc_flag;
 extern _RTC_time set_time, current_time;
 //--------------------------------------------------------------------------------------
 __irq void RTCHandler(void) {
-	if (ILR & ILR_RTCCIF) {	//interrupt counter
-		ILR |= ILR_RTCCIF; /* clear interrupt flag */
-		/* interrupt counter minute */
-		rtc_flag.bits.counter_minute = 1;
-	}
+//	if (ILR & ILR_RTCCIF) {	//interrupt counter
+//		ILR |= ILR_RTCCIF; /* clear interrupt flag */
+//		/* interrupt counter minute */
+//		if(MIN==60){
+//			rtc_flag.bits.counter_minute = 1;
+//		}
+//	}
 
 	if (ILR & ILR_RTCALF) {	//interrupt alarm
 		ILR |= ILR_RTCALF;/* clear interrupt flag */
+		half_hour = (ALMIN)?1:0;
+		ALMIN = (ALMIN)?0:30;
+		rtc_flag.bits.counter_minute = 1;
 	}
 	VICVectAddr = 0; /* Acknowledge Interrupt */
 }
 //--------------------------------------------------------------------------------------
 void RTC_init(void) {
 	/*--- ALARM registers --- AMR - 8 bits*/
-	AMR = 0xff;		//Mark All Alarm
+	AMR = ~AMRMIN;		//Mark All Alarm
+	ALMIN =0;
 	CIIR = 0x00;	//Dissable all counter_alarm
 	//RTC_SetAlarmMask(~AMRSEC);
 	//ALSEC=3;	//set Alarm register interrupt
 	/*-----------------------*/
-	CIIR |= CIIR_HOUR;	//set Counter interrupt
+	//CIIR |= CIIR_MIN;	//set Counter interrupt
+	
 	//---------------------------
 	CCR = 2;
 	CCR = 0;
@@ -41,7 +49,7 @@ void RTC_start(void) {
 	/*--- Start RTC counters ---*/
 	//CCR |= CCR_CLKEN;
 	CCR = (CCR_CLKEN | CCR_CLKSRC);	//Enable RTC and use the external 32.768kHz crystal
-	ILR = ILR_RTCCIF;					//Clears the RTC interrupt flag
+	ILR = ILR_RTCALF;					//Clears the RTC interrupt flag
 }
 //--------------------------------------------------------------------------------------
 void RTC_stop(void) {

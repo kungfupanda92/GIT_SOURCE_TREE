@@ -2,6 +2,7 @@
 #include "main.h"
 #include "iap.h"
 //#define DEBUG_SAVE_FLASH ;
+extern unsigned int half_hour;
 extern char buffer_frezze[];
 extern _rtc_flag rtc_flag;
 extern char freeze_code[];
@@ -19,10 +20,9 @@ void check_int_min(void) {
 	if (rtc_flag.bits.counter_minute == 0)
 		return;
 	rtc_flag.bits.counter_minute = 0;
-//	#ifdef DEBUG_SAVE_FLASH
-//		printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
-//	#endif
-
+	printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
+	printf("half_hour=%u\r",half_hour);
+	printf("ALMIN=%u\r",ALMIN);
 	freeze_frame();
 }
 
@@ -33,17 +33,11 @@ uint32_t check_sector_current(void) {
 	if (*(ptr_add + 2) == DOM)
 		 return 0x1000;
 	
-	ptr_add = (unsigned char*)0x2800;
-	if (*(ptr_add + 2) == DOM)
-		 return 0x2800;
 	
 		ptr_add = (unsigned char*)0x4000;
 	if (*(ptr_add + 2) == DOM)
 		 return 0x4000;
 	
-	ptr_add = (unsigned char*)0x5800;
-	if (*(ptr_add + 2) == DOM)
-		 return 0x5800;
 	ptr_add = (unsigned char*)0x1000;
 	if (*(ptr_add + 2) == 0xFF){
 		if(HOUR !=0){
@@ -56,19 +50,6 @@ uint32_t check_sector_current(void) {
 			  iap_Write(0x1000);
 		}
 		 return 0x1000;
-	}
-	ptr_add = (unsigned char*)0x2800;
-	if (*(ptr_add + 2) == 0xFF){
-				if(HOUR !=0){
-				my_bl_data[0] = MIN;
-				my_bl_data[1] = HOUR;
-				my_bl_data[2] = DOM;
-				my_bl_data[3] = MONTH;
-				my_bl_data[4] = (uint8_t)(YEAR - 2000);
-				my_bl_data[5] = 0x00;
-			  iap_Write(0x2800);
-		}
-		 return 0x2800;
 	}
 	
 		ptr_add = (unsigned char*)0x4000;
@@ -84,21 +65,7 @@ uint32_t check_sector_current(void) {
 		}
 		 return 0x4000;
 	}
-	ptr_add = (unsigned char*)0x5800;
-	if (*(ptr_add + 2) == 0xFF){
-				if(HOUR !=0){
-				my_bl_data[0] = MIN;
-				my_bl_data[1] = HOUR;
-				my_bl_data[2] = DOM;
-				my_bl_data[3] = MONTH;
-				my_bl_data[4] = (uint8_t)(YEAR - 2000);
-				my_bl_data[5] = 0x00;
-			  iap_Write(0x5800);
-		}
-		 return 0x5800;
-   }
 	
-
 	iap_Erase_sector(1, 3);
 	return 0x001000;
 }
@@ -144,11 +111,6 @@ void prepare_freeze_frame() {
 	
 	StringToHex(my_bl_data+6,buf_send_server);
 	
-//	printf("HEAD\r");
-//	for(i=0;i<179;i++){
-//		printf("%02X",my_bl_data[i]);
-//	}
-//	printf("END\r");
 	#ifdef DEBUG_SAVE_FLASH
 		printf("kaka=");
 		for(i=0;i<179;i++){
@@ -159,27 +121,24 @@ void prepare_freeze_frame() {
 void freeze_frame(void) {
 	uint32_t current_add;
 	uint8_t *ptr_add;
-	//static uint32_t current_add=0x00001000;
-	//static uint32_t hour_=0;
+	
 	static uint8_t mode=0;
-  //printf("toi day");
+
 	current_add= check_sector_current();
-	//printf("current_add1=%u\r", current_add);
+
 
 	prepare_freeze_frame();
-  //if(hour_++>=23) hour_=0;
-	//printf("hour_=%u\r",hour_);
-	current_add += (uint32_t) HOUR * 256;
-	//printf("current_add2=%u\r", current_add);
+
+	current_add += (((uint32_t) HOUR)*2 + half_hour) * 256;
+
 	if (current_add >= 0x4000 && mode==0) {
 		mode=1;
 		iap_Erase_sector(4, 6);
-		//current_add=0x00004000;
 	} else if (current_add >= 0x6F00 && mode==1) {
 		mode=0;
 		iap_Erase_sector(1, 3);
-		//current_add=0x00007000;
 	}
+	
 	ptr_add = (unsigned char*) current_add;
 	if (*(ptr_add) == 0xFF) { //dam bao dia chi can luu luon trong
 		#ifdef DEBUG_SAVE_FLASH
@@ -196,21 +155,15 @@ uint32_t check_add_current(uint8_t day_current) {
 	if (*(ptr_add + 2) == day_current)
 		 return 0x1000;
 	
-	ptr_add = (unsigned char*)0x2800;
-	if (*(ptr_add + 2) == day_current)
-		 return 0x2800;
-	
 		ptr_add = (unsigned char*)0x4000;
 	if (*(ptr_add + 2) == day_current)
 		 return 0x4000;
 	
-	ptr_add = (unsigned char*)0x5800;
-	if (*(ptr_add + 2) == day_current)
-		 return 0x5800;
 
 	return 0;
 }
 uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
+	uint32_t _half_hour;
 	char string_data[4];
 	uint32_t current_add,i;
 	uint8_t *ptr_add;
@@ -223,6 +176,8 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 	if (*(ptr_add+5) != 0xC3) { //dam bao co data
 		return 0;
 	}
+	_half_hour=(Time_server.minute)? 1:0;
+	 current_add += (((uint32_t) Time_server.hour)*2 + _half_hour) * 256;
 	
 	iap_Read(current_add, buffer_frezze, 256);
 	for(i=0;i<5;i++){

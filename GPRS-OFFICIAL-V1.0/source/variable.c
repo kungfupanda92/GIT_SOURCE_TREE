@@ -35,6 +35,7 @@ _program_counter program_counter;
 
 //-------------------------------------------------------------------------------------------------
 //variable for RTC
+unsigned int half_hour;
 _RTC_time set_time, current_time;
 _RTC_time time_server;
 uint16_t time_auto_read;

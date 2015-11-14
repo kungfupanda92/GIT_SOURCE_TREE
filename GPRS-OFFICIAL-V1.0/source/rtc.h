@@ -22,9 +22,9 @@
 #define AMRMON		0x00000040  /* Alarm mask for Month */
 #define AMRYEAR		0x00000080  /* Alarm mask for Year */
 
-#define PREINT_RTC	0x0000016D; //New CLK on Keil board //0x000001C8  /* Prescaler value, integer portion,
+#define PREINT_RTC	0x00000696; //New CLK on Keil board //0x000001C8  /* Prescaler value, integer portion,
 				    			//PCLK @ 12Mhz //PCLK = 15Mhz */
-#define PREFRAC_RTC	0x00001B00; //New CLK on Keil board //0x000061C0  /* Prescaler value, fraction portion,
+#define PREFRAC_RTC	0x00004000; //New CLK on Keil board //0x000061C0  /* Prescaler value, fraction portion,
 				    			//PCLK @ 12Mhz //PCLK = 15Mhz */
 #define ILR_RTCCIF	0x01
 #define ILR_RTCALF	0x02

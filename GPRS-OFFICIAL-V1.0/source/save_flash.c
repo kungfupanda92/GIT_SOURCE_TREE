@@ -171,13 +171,14 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 	if (current_add == 0)
 		return 0;
   
-	current_add += (uint32_t) (Time_server.hour) * 256;
+	_half_hour=(Time_server.minute)? 1:0;
+	 current_add += (((uint32_t) Time_server.hour)*2 + _half_hour) * 256;
+	
 	ptr_add = (unsigned char*) current_add;
 	if (*(ptr_add+5) != 0xC3) { //dam bao co data
 		return 0;
 	}
-	_half_hour=(Time_server.minute)? 1:0;
-	 current_add += (((uint32_t) Time_server.hour)*2 + _half_hour) * 256;
+
 	
 	iap_Read(current_add, buffer_frezze, 256);
 	for(i=0;i<5;i++){

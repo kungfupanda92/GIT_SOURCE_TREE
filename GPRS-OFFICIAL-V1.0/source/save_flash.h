@@ -12,4 +12,6 @@ void test_save(void);
 void freeze_frame(void);
 
 uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff);
+
+uint8_t check_id(void);
 #endif /*SAVE_FLASH_H_*/

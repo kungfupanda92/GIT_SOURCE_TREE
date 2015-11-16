@@ -270,7 +270,7 @@ unsigned int iap_Erase_sector(unsigned long sec_start,unsigned long sec_stop)
 		VICIntEnable = buffer_vic;		// set back ints
 		return 4;
 	}
-	printf("check ok\r");
+	//printf("check ok\r");
 	#ifdef DEBUG
 	printf("\n\rSector successfully erased.\n\r");
 	#endif
@@ -330,7 +330,7 @@ unsigned int iap_Erase(unsigned long tmp_adr)
 		VICIntEnable = buffer_vic;		// set back ints
 		return 4;
 	}
-	printf("check ok\r");
+	//printf("check ok\r");
 	#ifdef DEBUG
 	printf("\n\rSector successfully erased.\n\r");
 	#endif

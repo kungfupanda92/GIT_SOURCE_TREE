@@ -38,6 +38,7 @@ int main(void) {
 	ON_OFF_mudule_GPRS();
 	clear_watchdog();
 	read_para();		//load para from metter: ID, IP, PORT, APN
+	check_id();
 	prepare_config_mudule();
 	clear_watchdog();
 	enable_ext_wdt();

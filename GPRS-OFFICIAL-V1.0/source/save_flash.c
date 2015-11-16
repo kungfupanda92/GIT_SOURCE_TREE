@@ -2,6 +2,7 @@
 #include "main.h"
 #include "iap.h"
 //#define DEBUG_SAVE_FLASH ;
+extern PARA_PLC para_plc;
 extern unsigned int half_hour;
 extern char buffer_frezze[];
 extern _rtc_flag rtc_flag;
@@ -20,9 +21,12 @@ void check_int_min(void) {
 	if (rtc_flag.bits.counter_minute == 0)
 		return;
 	rtc_flag.bits.counter_minute = 0;
-	printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
-	printf("half_hour=%u\r",half_hour);
-	printf("ALMIN=%u\r",ALMIN);
+	#ifdef CHECK_MIN
+		printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
+		printf("half_hour=%u\r",half_hour);
+		printf("ALMIN=%u\r",ALMIN);
+	#endif
+	
 	freeze_frame();
 }
 
@@ -126,7 +130,6 @@ void freeze_frame(void) {
 
 	current_add= check_sector_current();
 
-
 	prepare_freeze_frame();
 
 	current_add += (((uint32_t) HOUR)*2 + half_hour) * 256;
@@ -188,6 +191,28 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 	for(i=5;i<179;i++){
 		sprintf(string_data, "%02X",buffer_frezze[i]);
 		strcat(return_buff, string_data);
+	}
+	return 1;
+}
+uint8_t check_id(void){
+	uint8_t *ptr_add;
+	uint8_t i;
+	char hexstring[7];
+
+	ptr_add = (unsigned char*)0x7000;
+	
+  StringToHex(hexstring,para_plc._ID);	
+	
+	for(i=0;i<6;i++){
+		if(*(ptr_add+i) != hexstring[i]){
+			iap_Erase_sector(1, 7);
+			StringToHex(my_bl_data,para_plc._ID);
+			iap_Write(0x7000);
+			#ifdef CHECK_ID
+				printf("erase ok\r");
+			#endif
+			return 0;
+		}
 	}
 	return 1;
 }

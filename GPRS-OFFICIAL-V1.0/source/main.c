@@ -113,6 +113,7 @@ int main(void) {
 					counter_reset_gprs = 0;				//reset counter
 				//------------------------------------
 				check_int_min();
+				
 			}
 		}
 		/*--------------------------------------------------------------------------------
@@ -138,6 +139,9 @@ void gpio_config(void) {
 
 	GPIO_Output(GPIO_P0, GPIO_PIN_14);//Port Output, --> control Power for MAX705
 	GPIO_Output(GPIO_P0, GPIO_PIN_18);		//Port Output, --> Toggled MAX705
+	
+	GPIO_Output(GPIO_P0, GPIO_PIN_3); // Port output SDA
+	
 
 	GPIO_WriteBit(GPIO_P0, GPIO_PIN_14, 0); //--> Power_Off for MAX705
 }
@@ -158,3 +162,8 @@ void enable_ext_wdt(void) {
 }
 //----------------------------------------------------------------------------------------
 
+void restart_gprs(void){
+	GPIO_WriteBit(GPIO_P0, GPIO_PIN_3, 1);
+	delay_ms(3000);
+	GPIO_WriteBit(GPIO_P0, GPIO_PIN_3, 0);
+}

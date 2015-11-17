@@ -1,4 +1,5 @@
 #include "gprs_com.h"
+#include "main.h"
 //---------------------------------------------------------------------------------
 extern _system_flag system_flag;
 extern _program_counter program_counter;
@@ -17,6 +18,9 @@ bool ON_OFF_mudule_GPRS(void) {
 		uart1_rx.para_rx.state_uart = UART_START_MODULE_GPRS;
 		uart1_rx.para_rx.counter_rx = 0;
 		//*****-----*****-----
+		
+		restart_gprs();
+		
 		GPIO_WriteBit(GPIO_P0, GPIO_PIN_16, 1);
 		delay_nsecond(3);	//delay_3s
 		GPIO_WriteBit(GPIO_P0, GPIO_PIN_16, 0);

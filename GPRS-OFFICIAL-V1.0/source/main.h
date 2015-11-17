@@ -25,5 +25,6 @@ void var_start (void);
 void gpio_config(void);
 void init_VIC(void);
 void enable_ext_wdt (void);
+void restart_gprs(void);
 //-----------------------------------------------------------------------
 #endif	/*  */

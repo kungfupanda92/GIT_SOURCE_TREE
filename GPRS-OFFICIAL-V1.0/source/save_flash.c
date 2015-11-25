@@ -71,8 +71,7 @@ uint32_t check_sector_current(void) {
 		 return 0x4000;
 	}
 	
-	iap_Erase_sector(1, 3);
-	return 0x001000;
+	return 	errase_day_old();
 }
 void prepare_freeze_frame() {
 
@@ -135,13 +134,13 @@ void freeze_frame(void) {
 
 	current_add += (((uint32_t) HOUR)*2 + half_hour) * 256;
 
-	if (current_add >= 0x4000 && mode==0) {
-		mode=1;
-		iap_Erase_sector(4, 6);
-	} else if (current_add >= 0x6F00 && mode==1) {
-		mode=0;
-		iap_Erase_sector(1, 3);
-	}
+//	if (current_add >= 0x3F00 && mode==0) {
+//		mode=1;
+//		iap_Erase_sector(4, 6);
+//	} else if (current_add >= 0x6F00 && mode==1) {
+//		mode=0;
+//		iap_Erase_sector(1, 3);
+//	}
 	
 	ptr_add = (unsigned char*) current_add;
 	if (*(ptr_add) == 0xFF) { //dam bao dia chi can luu luon trong
@@ -195,6 +194,7 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 	}
 	return 1;
 }
+//====================================================================
 uint8_t check_id(void){
 	uint8_t *ptr_add;
 	uint8_t i;
@@ -218,4 +218,84 @@ uint8_t check_id(void){
 	return 1; //No change ID
 }
 
-
+//====================================================================
+uint8_t check_day_ok(unsigned long add_day){
+	unsigned char *ptr;
+	ptr = (unsigned char*) add_day;
+	if(*(ptr+2)>31)//day of month
+			return 0;
+	if(*(ptr+3)>12)//month
+			return 0;
+	if(*(ptr+4)>100)//year
+			return 0;
+	return 1;
+}
+uint8_t compare_date(_RTC_time day1, _RTC_time day2){
+	if(day1.year > day2.year)
+		return 1;
+	else if (day1.year < day2.year)
+		return 2;
+	else{
+		if(day1.month >day2.month)
+			return 1;
+		else if(day1.month <day2.month)
+			return 2;
+		else{
+			if(day1.day_of_month>day2.day_of_month)
+				return 1;
+			else if(day1.day_of_month<day2.day_of_month)
+				return 2;
+			else return 0;
+		}
+				
+		}
+	}
+uint32_t errase_day_old(void){
+	uint8_t *ptr_day1;
+	uint8_t *ptr_day2;
+	_RTC_time day1,day2,current;
+	
+	if(check_day_ok(0x1000) ==0){
+			iap_Erase_sector(1, 3);
+			return 0x1000;
+	}
+	if(check_day_ok(0x4000) ==0){
+			iap_Erase_sector(4, 6);
+			return 0x4000;
+	}
+	ptr_day1=(unsigned char*)0x1000;
+	ptr_day2=(unsigned char*)0x4000;
+	
+	day1.day_of_month= *(ptr_day1+2);
+	day1.month= *(ptr_day1+3);
+	day1.year= *(ptr_day1+4);
+	
+	day2.day_of_month= *(ptr_day2+2);
+	day2.month= *(ptr_day2+3);
+	day2.year= *(ptr_day2+4);
+	
+	current.day_of_month=DOM;
+	current.month=MONTH;
+	current.year=(uint8_t)(YEAR - 2000);
+	
+	if(compare_date(day1,day2)==1){
+		if(compare_date(current,day2)==1){
+			iap_Erase_sector(1, 3);
+			return 0x1000;
+		}
+		else{ 
+			iap_Erase_sector(1,6);
+			return 0x1000;
+		}
+		}
+	else{
+		if(compare_date(current,day1)==1){
+			iap_Erase_sector(4, 6);
+			return 0x4000;
+		}
+		else{
+			iap_Erase_sector(1,6);
+			return 0x1000;
+		}
+		}
+}

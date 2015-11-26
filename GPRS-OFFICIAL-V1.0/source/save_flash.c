@@ -27,7 +27,6 @@ void check_freeze_data (void){
 		printf("half_hour=%u\r",half_hour);
 		printf("ALMIN=%u\r",ALMIN);
 	#endif
-	printf("hello baby\r");
 	freeze_frame();
 }
 //----------------------------------------------------------------------------------------------
@@ -127,20 +126,12 @@ void freeze_frame(void) {
 	uint8_t *ptr_add;
 	
 	static uint8_t mode=0;
+	
+	prepare_freeze_frame();
 
 	current_add= check_sector_current();
 
-	prepare_freeze_frame();
-
 	current_add += (((uint32_t) HOUR)*2 + half_hour) * 256;
-
-//	if (current_add >= 0x3F00 && mode==0) {
-//		mode=1;
-//		iap_Erase_sector(4, 6);
-//	} else if (current_add >= 0x6F00 && mode==1) {
-//		mode=0;
-//		iap_Erase_sector(1, 3);
-//	}
 	
 	ptr_add = (unsigned char*) current_add;
 	if (*(ptr_add) == 0xFF) { //dam bao dia chi can luu luon trong
@@ -255,22 +246,14 @@ uint32_t errase_day_old(void){
 	uint8_t *ptr_day2;
 	_RTC_time day1,day2,current;
 	
-//	if(check_day_ok(0x1000) ==0){
-//			iap_Erase_sector(1, 3);
-//			return 0x1000;
-//	}
-//	if(check_day_ok(0x4000) ==0){
-//			iap_Erase_sector(4, 6);
-//			return 0x4000;
-//	}
-	
-	my_bl_data[0] = MIN;
-	my_bl_data[1] = HOUR;
-	my_bl_data[2] = 28;
-	my_bl_data[3] = 11;
-	my_bl_data[4] = 15;
-	my_bl_data[5] = 0x00;
-	iap_Write(0x4000);
+	if(check_day_ok(0x1000) ==0){
+			iap_Erase_sector(1, 3);
+			return 0x1000;
+	}
+	if(check_day_ok(0x4000) ==0){
+			iap_Erase_sector(4, 6);
+			return 0x4000;
+	}
 	
 	ptr_day1=(unsigned char*)0x1000;
 	ptr_day2=(unsigned char*)0x4000;
@@ -287,29 +270,31 @@ uint32_t errase_day_old(void){
 	current.month=MONTH;
 	current.year=(uint8_t)(YEAR - 2000);
 	
-	printf("Day1:%u--%u--%u\r", day1.day_of_month,day1.month,day1.year);
-	printf("Day2:%u--%u--%u\r", day2.day_of_month,day2.month,day2.year);
+	//printf("Day1:%u--%u--%u\r", day1.day_of_month,day1.month,day1.year);
+	//printf("Day2:%u--%u--%u\r", day2.day_of_month,day2.month,day2.year);
+	//printf("current:%u--%u--%u\r", current.day_of_month,current.month,current.year);
+	//printf("whe:%u\r",compare_date(day1,day2));
 	
-	printf("return:%u\r",compare_date(day1,day2));
-	
-	
-	while(1);
 	if(compare_date(day1,day2)==1){
-		if(compare_date(current,day2)==1){
-			iap_Erase_sector(1, 3);
-			return 0x1000;
+		if(compare_date(current,day1)==1){
+			//printf("xoa 4,6\r");
+			iap_Erase_sector(4, 6);
+			return 0x4000;
 		}
 		else{ 
+			//printf("xoa het\r");
 			iap_Erase_sector(1,6);
 			return 0x1000;
 		}
 		}
 	else{
-		if(compare_date(current,day1)==1){
-			iap_Erase_sector(4, 6);
-			return 0x4000;
+		if(compare_date(current,day2)==1){
+			//printf("xoa 1,3\r");	
+			iap_Erase_sector(1, 3);
+			return 0x1000;
 		}
 		else{
+			//printf("xoa het\r");
 			iap_Erase_sector(1,6);
 			return 0x1000;
 		}

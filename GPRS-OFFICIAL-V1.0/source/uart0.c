@@ -4,6 +4,7 @@ void initUart0(uint32_t baudrate) {
 	unsigned long Fdiv;
 	VICIntEnClr = 1 << 6;	/* Disable Interrupt */
 	PINSEL0 |= 0x00000005; // Select Txd and Rxd , Txd is not used in our case.
+	//PINSEL0 &= 0xFFFFFFFA; // Select Txd and Rxd , Txd is not used in our case.
 
     //If you'r not acquianted to UARTs then use below settings as it is ,
 	//I'll cover UARTs and its related Interrupt programming in upcoming Tutorial.

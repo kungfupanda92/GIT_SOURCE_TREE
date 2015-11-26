@@ -20,7 +20,6 @@ extern unsigned char stop_frame_immediately;
 extern _system_flag system_flag;
 
 extern CONFIG_NEWWORK config_network;
-extern _freeze_data free_data;
 
 extern char out_data[15];
 extern char data_PLC[50];
@@ -123,24 +122,24 @@ void read_para(void) {
 	char temp[20];
 	sign_in();
 
-	return_data(para_plc._ID,"C100");//read APN
-	
-  return_data(data_PLC,"C105");//read IP1
+	return_data(para_plc._ID, "C100");		//read APN
+
+	return_data(data_PLC, "C105");		//read IP1
 	StringToHex(temp, data_PLC);
 	sprintf(config_network._IP1, "%u.%u.%u.%u", temp[0], temp[1], temp[2],
 			temp[3]);
-	
-	return_data(data_PLC,"C106");//read PORT
+
+	return_data(data_PLC, "C106");		//read PORT
 	sprintf(config_network._PORT, "%u", (uint32_t) strtol(data_PLC, NULL, 16));
-	
-	return_data(data_PLC,"C107");//read APN
+
+	return_data(data_PLC, "C107");		//read APN
 	StringToHex(config_network._APN, data_PLC);
-	
-	return_data(data_PLC,"C108");//read IP2
+
+	return_data(data_PLC, "C108");		//read IP2
 	StringToHex(temp, data_PLC);
 	sprintf(config_network._IP2, "%u.%u.%u.%u", temp[0], temp[1], temp[2],
 			temp[3]);
-	
+
 	//---------------------------------------------------------------
 	//send break command
 	sprintf(out_data, "%cB0%c%c", SOH, ETX, 0x71);
@@ -329,29 +328,29 @@ unsigned char process_server_reading_data_save(char *data_server) {
 	buf_send_server[57] = '3';
 
 	buf_send_server[58] = NULL;
-	
+
 //-=======================================
-	buff_time[0]=0;
-	temp_data1[0]=0;
+	buff_time[0] = 0;
+	temp_data1[0] = 0;
 	strncat(temp_data1, ptr + TIME_FREEZE_DATA_POS, 10);	//time
-	StringToHex(buff_time,temp_data1);
+	StringToHex(buff_time, temp_data1);
 	//set time
-	time_server.day_of_year=bcd2hex(buff_time[0]);
-	time_server.month=bcd2hex(buff_time[1]);
-	time_server.day_of_month=bcd2hex(buff_time[2]);
-	time_server.hour=bcd2hex(buff_time[3]);
-	time_server.minute=bcd2hex(buff_time[4]);
+	time_server.day_of_year = bcd2hex(buff_time[0]);
+	time_server.month = bcd2hex(buff_time[1]);
+	time_server.day_of_month = bcd2hex(buff_time[2]);
+	time_server.hour = bcd2hex(buff_time[3]);
+	time_server.minute = bcd2hex(buff_time[4]);
 	//end time
-	if(read_freeze_frame(time_server,buf_send_server+58)==0){//no data freeze in flash
-			buf_send_server[18] = '1';		
-			buf_send_server[19] = '2';
-			buf_send_server[20] = '0';		
-			buf_send_server[21] = '0';
-		  buf_send_server[20] = '0';		
-			buf_send_server[21] = '0';
-		  buf_send_server[56] = '0';
-	    buf_send_server[57] = '0';
-		  buf_send_server[58] = NULL;
+	if (read_freeze_frame(time_server, buf_send_server + 58) == 0) {//no data freeze in flash
+		buf_send_server[18] = '1';
+		buf_send_server[19] = '2';
+		buf_send_server[20] = '0';
+		buf_send_server[21] = '0';
+		buf_send_server[20] = '0';
+		buf_send_server[21] = '0';
+		buf_send_server[56] = '0';
+		buf_send_server[57] = '0';
+		buf_send_server[58] = NULL;
 	}
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	//printf("%s\r",string_lenght);
@@ -369,51 +368,6 @@ unsigned char process_server_syntime_module(char *data_server) {
 
 	ptr = data_server;	//change pointer
 
-	//Check Time from server
-	time1 = *(ptr + TIME_SYN_MODULE_POS) - 0x30;	//second
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 1) - 0x30;
-	second = time1 * 10 + time2;	//convert time to decimal
-	if (second >= 60)	//check second
-		return false;
-
-	time1 = *(ptr + TIME_SYN_MODULE_POS + 2) - 0x30;	//minute
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 3) - 0x30;
-	minute = time1 * 10 + time2;	//convert time to decimal
-	if (minute >= 60)	//check minute
-		return false;
-
-	time1 = *(ptr + TIME_SYN_MODULE_POS + 4) - 0x30;	//Hour
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 5) - 0x30;
-	hour = time1 * 10 + time2;	//convert time to decimal
-	if (hour >= 24)
-		return false;
-
-	time1 = *(ptr + TIME_SYN_MODULE_POS + 6) - 0x30;	//Date
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 7) - 0x30;
-	date = time1 * 10 + time2;	//convert time to decimal
-	if (date >= 32)
-		return false;
-
-	time1 = *(ptr + TIME_SYN_MODULE_POS + 8) - 0x30;	//month
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 9) - 0x30;
-	month = time1 * 10 + time2;	//convert time to decimal
-	if (month >= 13)
-		return false;
-
-	time1 = *(ptr + TIME_SYN_MODULE_POS + 10) - 0x30;	//year
-	time2 = *(ptr + TIME_SYN_MODULE_POS + 11) - 0x30;
-	year = time1 * 10 + time2;	//convert time to decimal
-	if (year >= 100)
-		return false;
-
-	//SYN time for module gprs
-	SEC = second;
-	MIN = minute;
-	HOUR = hour;
-	DOM = date;
-	MONTH = month;
-	YEAR = year + 2000;
-
 	//Prepare for Answer server
 	buf_send_server[0] = 0;
 	strcat(buf_send_server, "68");	//start frame
@@ -422,7 +376,56 @@ unsigned char process_server_syntime_module(char *data_server) {
 	strcat(buf_send_server, "68");	//restart code
 	strcat(buf_send_server, "86");	//control code
 	strcat(buf_send_server, "0500"); //length data Tx (5 bytes)
-	strcat(buf_send_server, "0000308000"); //data
+
+	if (strstr(ptr, "1688")) {	//Setup time free_zone
+		strcat(buf_send_server, "0000168800"); //data
+	} else if (strstr(ptr, "3080")) {	//syntime module
+		//Check Time from server
+		time1 = *(ptr + TIME_SYN_MODULE_POS) - 0x30;	//second
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 1) - 0x30;
+		second = time1 * 10 + time2;	//convert time to decimal
+		if (second >= 60)	//check second
+			return false;
+
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 2) - 0x30;	//minute
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 3) - 0x30;
+		minute = time1 * 10 + time2;	//convert time to decimal
+		if (minute >= 60)	//check minute
+			return false;
+
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 4) - 0x30;	//Hour
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 5) - 0x30;
+		hour = time1 * 10 + time2;	//convert time to decimal
+		if (hour >= 24)
+			return false;
+
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 6) - 0x30;	//Date
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 7) - 0x30;
+		date = time1 * 10 + time2;	//convert time to decimal
+		if (date >= 32)
+			return false;
+
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 8) - 0x30;	//month
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 9) - 0x30;
+		month = time1 * 10 + time2;	//convert time to decimal
+		if (month >= 13)
+			return false;
+
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 10) - 0x30;	//year
+		time2 = *(ptr + TIME_SYN_MODULE_POS + 11) - 0x30;
+		year = time1 * 10 + time2;	//convert time to decimal
+		if (year >= 100)
+			return false;
+
+		//SYN time for module gprs
+		SEC = second;
+		MIN = minute;
+		HOUR = hour;
+		DOM = date;
+		MONTH = month;
+		YEAR = year + 2000;
+		strcat(buf_send_server, "0000308000"); //data
+	}
 
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);
@@ -438,27 +441,6 @@ unsigned char process_server_readtime_module(char *data_server) {
 
 	ptr = data_server;	//change pointer
 
-	//prepare time
-	tem_data[0] = (SEC / 10) + 0x30;
-	tem_data[1] = (SEC % 10) + 0x30;
-
-	tem_data[2] = (MIN / 10) + 0x30;
-	tem_data[3] = (MIN % 10) + 0x30;
-
-	tem_data[4] = (HOUR / 10) + 0x30;
-	tem_data[5] = (HOUR % 10) + 0x30;
-
-	tem_data[6] = (DOM / 10) + 0x30;
-	tem_data[7] = (DOM % 10) + 0x30;
-
-	tem_data[8] = (MONTH / 10) + 0x30;
-	tem_data[9] = (MONTH % 10) + 0x30;
-
-	tem_data[10] = ((YEAR - 2000) / 10) + 0x30;
-	tem_data[11] = ((YEAR - 2000) % 10) + 0x30;
-
-	tem_data[12] = 0;
-
 	//Prepare for Answer server
 	buf_send_server[0] = 0;
 	strcat(buf_send_server, "68");	//start frame
@@ -466,10 +448,37 @@ unsigned char process_server_readtime_module(char *data_server) {
 	strncat(buf_send_server, ptr + CHECKCOUNT_POS, 4);	//checkcount
 	strcat(buf_send_server, "68");	//restart code
 	strcat(buf_send_server, "81");	//control code
-	strcat(buf_send_server, "1000"); //length data Tx (16 bytes)
-	strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-	strncat(buf_send_server, tem_data, 12); //data of rx frame
 
+	if (strstr(ptr, "3080")) {	//read time module
+		//prepare time
+		tem_data[0] = (SEC / 10) + 0x30;
+		tem_data[1] = (SEC % 10) + 0x30;
+
+		tem_data[2] = (MIN / 10) + 0x30;
+		tem_data[3] = (MIN % 10) + 0x30;
+
+		tem_data[4] = (HOUR / 10) + 0x30;
+		tem_data[5] = (HOUR % 10) + 0x30;
+
+		tem_data[6] = (DOM / 10) + 0x30;
+		tem_data[7] = (DOM % 10) + 0x30;
+
+		tem_data[8] = (MONTH / 10) + 0x30;
+		tem_data[9] = (MONTH % 10) + 0x30;
+
+		tem_data[10] = ((YEAR - 2000) / 10) + 0x30;
+		tem_data[11] = ((YEAR - 2000) % 10) + 0x30;
+
+		tem_data[12] = 0;
+
+		strcat(buf_send_server, "1000"); //length data Tx (16 bytes)
+		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+		strncat(buf_send_server, tem_data, 12); //data of rx frame
+	} else if (strstr(ptr, "1688")) { //Doc chu ky chot data
+		strcat(buf_send_server, "0C00"); //length data Tx (16 bytes)
+		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+		strcat(buf_send_server, "3000"); //data - 30p
+	}
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);
 	strcat(buf_send_server, "16");
@@ -630,14 +639,15 @@ flag_system process_server_reading_direct(char *data_server) {
 flag_system load_data_meter(char* code_4_byte, char* data, unsigned char mode) {
 	uint32_t time_out;
 	uint32_t i;
-	
+
 	char result_BCC = 0;
 	clear_para(ACK, NULL, true);
 	//write commands
 	if (mode == 0)
 		sprintf(temp_data1, "%cW2%c%s(%s)%c", SOH, STX, code_4_byte, data, ETX);
 	else
-		sprintf(temp_data1, "%cW2%c%s(01%s)%c", SOH, STX, code_4_byte, data, ETX);
+		sprintf(temp_data1, "%cW2%c%s(01%s)%c", SOH, STX, code_4_byte, data,
+		ETX);
 	for (i = 1; i < strlen(temp_data1); i++) {
 		result_BCC ^= temp_data1[i];
 	}
@@ -749,7 +759,8 @@ void convert_data(char* sour, char* des, unsigned int len) {
  * @param  None
  * @retval None
  */
-void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freeze_mode) {
+void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,
+		uint8_t freeze_mode) {
 	uint32_t len, length, i;
 	uint8_t mode = 0xFF;
 	uint32_t meter_hex;
@@ -764,8 +775,9 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freez
 			break;
 		}
 	}
-	if(i>=LEN_BUFF_FREEZE) return;
-	
+	if (i >= LEN_BUFF_FREEZE)
+		return;
+
 	sprintf(code_server, "%0.4X", code);
 	sprintf(code_meter, "%0.4X", meter_hex);
 
@@ -777,7 +789,7 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freez
 		len = strlen(buff_contain_data_read_metter);
 		convert_data(buff_contain_data_read_metter,
 				buff_contain_data_add_send_server, len);
-		ptr_buffer=buff_contain_data_add_send_server;
+		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case volt:
 		buff_contain_data_add_send_server[0] = buff_contain_data_read_metter[1];
@@ -785,10 +797,10 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freez
 		buff_contain_data_add_send_server[2] = '0';
 		buff_contain_data_add_send_server[3] = buff_contain_data_read_metter[0];
 		buff_contain_data_add_send_server[4] = 0;
-		ptr_buffer=buff_contain_data_add_send_server;
+		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case not_change_data:
-		ptr_buffer=buff_contain_data_read_metter;
+		ptr_buffer = buff_contain_data_read_metter;
 		break;
 	case current_reverse:
 		buff_contain_data_add_send_server[0] = buff_contain_data_read_metter[1];
@@ -797,14 +809,14 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freez
 		buff_contain_data_add_send_server[3] = buff_contain_data_read_metter[0];
 		buff_contain_data_add_send_server[4] = buff_contain_data_read_metter[4];
 		buff_contain_data_add_send_server[5] = buff_contain_data_read_metter[5];
-		ptr_buffer=buff_contain_data_add_send_server;
+		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case time_max_demand:
-		index=8;
-	  len = strlen(buff_contain_data_read_metter);
+		index = 8;
+		len = strlen(buff_contain_data_read_metter);
 		convert_data(buff_contain_data_read_metter,
 				buff_contain_data_add_send_server, len);
-		ptr_buffer=buff_contain_data_add_send_server;
+		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case 0xFF:
 		return;
@@ -812,7 +824,7 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,uint8_t freez
 		return;
 	}
 
-	if(freeze_mode==0)
+	if (freeze_mode == 0)
 		strncat(frame_tx, code_server, 4);
 	strncat(frame_tx, ptr_buffer + index, length);
 }
@@ -839,7 +851,7 @@ void read_metter_directmode(char *frame_tx, unsigned int len_command) {
 		strncpy(four_bytes, commands + i, 4);
 		four_bytes[4] = 0;
 		hex_server = (uint16_t) strtol(four_bytes, NULL, 16);
-		read_data_meter(frame_tx, hex_server, 0,0);
+		read_data_meter(frame_tx, hex_server, 0, 0);
 		i += 4;
 
 	} while (i < len);

@@ -1,5 +1,4 @@
 #include "gprs_com.h"
-#include "main.h"
 //---------------------------------------------------------------------------------
 extern _system_flag system_flag;
 extern _program_counter program_counter;
@@ -9,18 +8,17 @@ extern PARA_PLC para_plc;
 extern CONFIG_NEWWORK config_network;
 //-------------------------------------------------------------------------------------------------
 void answer_server(void);
-
+void restart_gprs(void);
+//-------------------------------------------------------------------------------------------------
 bool ON_OFF_mudule_GPRS(void) {
 	unsigned char i, j;
+	restart_gprs();
 	for (i = 0; i < 7; i++) {
 		//*****-----*****-----
 		clear_array(uart1_rx.buffer_rx.buf_response_command, 70);
 		uart1_rx.para_rx.state_uart = UART_START_MODULE_GPRS;
 		uart1_rx.para_rx.counter_rx = 0;
 		//*****-----*****-----
-		
-		restart_gprs();
-		
 		GPIO_WriteBit(GPIO_P0, GPIO_PIN_16, 1);
 		delay_nsecond(3);	//delay_3s
 		GPIO_WriteBit(GPIO_P0, GPIO_PIN_16, 0);
@@ -100,25 +98,6 @@ unsigned char wait_response_command_gprs(unsigned char second) {
 	delay_nsecond(1);
 	return ret;
 }
-//-------------------------------------------------------------------------------------------------
-/*
-void check_para(void) {
-	char temp_data[15];
-
-	//Check IP2
-	system_flag.bits.IP2_CORRECT = 0;		//default that IP2 is correct
-	strncat(temp_data, config_network._IP2, 7);
-	if (strstr(temp_data, "192.168"))
-		system_flag.bits.IP2_CORRECT = 1;//IP2 have been set error (because that is IP_Local Address)
-	else {
-		strncat(temp_data, config_network._IP2, 4);
-		if (strstr(temp_data, "10."))
-			system_flag.bits.IP2_CORRECT = 1;//IP2 have been set error (because that is IP_Local Address)
-		else if (strstr(temp_data, "127."))
-			system_flag.bits.IP2_CORRECT = 1;//IP2 have been set error (because that is IP_Local Address)
-	}
-}
-*/
 //-------------------------------------------------------------------------------------------------
 void prepare_config_mudule(void) {
 	unsigned char i, j;
@@ -462,7 +441,7 @@ void process_data_rx_from_server(char *data_server, unsigned char control_code) 
 		break;
 	case COMMAND_READ_DATA_SAVED:
 		process_server_reading_data_save(ptr);
-	  answer_server();
+		answer_server();
 		break;
 	case COMMAND_SYN_TIME_MODULE:
 		i = process_server_syntime_module(ptr);
@@ -517,5 +496,9 @@ void answer_server(void) {
 	}
 }
 //----------------------------------------------------------------------------------------------------------------------
-
+void restart_gprs(void) {
+	GPIO_WriteBit(GPIO_P0, GPIO_PIN_3, 1);
+	delay_nsecond(3);
+	GPIO_WriteBit(GPIO_P0, GPIO_PIN_3, 0);
+}
 //----------------------------------------------------------------------------------------------------------------------

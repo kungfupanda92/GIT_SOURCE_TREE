@@ -22,6 +22,8 @@ void StringToHex(char* hexstring, char* string) {
 			//so
 			hexstring[j] = (ch - 55) << 4;
 		}
+
+
 		ch = string[i + 1];
 		if (ch >= 30 && ch <= 0x39) {
 			//so
@@ -31,7 +33,7 @@ void StringToHex(char* hexstring, char* string) {
 			hexstring[j] += (ch - 55);
 		}
 	}
-	hexstring[j] = 0;
+	hexstring[j] = 0; //end frame --> NULL
 }
 //--------------------------------------------------------------------------------------
 unsigned char convert_string2hex(char *data_in) {

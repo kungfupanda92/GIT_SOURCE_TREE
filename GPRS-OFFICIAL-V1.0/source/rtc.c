@@ -2,42 +2,34 @@
 //--------------------------------------------------------------------------------------
 extern unsigned int half_hour;
 extern _rtc_flag rtc_flag;
-extern _RTC_time set_time, current_time;
 //--------------------------------------------------------------------------------------
 __irq void RTCHandler(void) {
-//	if (ILR & ILR_RTCCIF) {	//interrupt counter
-//		ILR |= ILR_RTCCIF; /* clear interrupt flag */
-//		/* interrupt counter minute */
-//		if(MIN==60){
-//			rtc_flag.bits.counter_minute = 1;
-//		}
-//	}
-
+	if (ILR & ILR_RTCCIF) {	//interrupt counter
+		ILR |= ILR_RTCCIF; /* clear interrupt flag */
+	}
 	if (ILR & ILR_RTCALF) {	//interrupt alarm
 		ILR |= ILR_RTCALF;/* clear interrupt flag */
 		half_hour = (ALMIN)?1:0;
 		ALMIN = (ALMIN)?0:30;
-		rtc_flag.bits.counter_minute = 1;
+		//rtc_flag.bits.counter_minute = 1;
+		rtc_flag.bits.auto_save_data = 1;
 	}
 	VICVectAddr = 0; /* Acknowledge Interrupt */
 }
 //--------------------------------------------------------------------------------------
 void RTC_init(void) {
 	/*--- ALARM registers --- AMR - 8 bits*/
-	AMR = ~AMRMIN;		//Mark All Alarm
-	ALMIN =0;
+	AMR = 0xff;		//Mark All Alarm
 	CIIR = 0x00;	//Dissable all counter_alarm
-	//RTC_SetAlarmMask(~AMRSEC);
-	//ALSEC=3;	//set Alarm register interrupt
+	ALMIN =0;
+	AMR &= ~AMRMIN;
 	/*-----------------------*/
 	//CIIR |= CIIR_MIN;	//set Counter interrupt
-	
 	//---------------------------
 	CCR = 2;
 	CCR = 0;
 	PREINT = PREINT_RTC;
 	PREFRAC = PREFRAC_RTC;
-
 	// enable interrupts RTC for each second changed
 	VICVectAddr13 = (unsigned) RTCHandler; 		//Set the timer ISR vector address
 	VICVectCntl13 = 0x20 | 13;					//Set channel
@@ -83,6 +75,7 @@ void RTC_SetAlarm(_RTC_time Alarm) {
 	ALYEAR = Alarm.year;
 }
 //--------------------------------------------------------------------------------------
+/*
 void RTC_GetTime (void) {
 
 	current_time.second = SEC;
@@ -94,6 +87,7 @@ void RTC_GetTime (void) {
 	current_time.month = MONTH;
 	current_time.year = YEAR;
 }
+*/
 //--------------------------------------------------------------------------------------
 void RTC_SetAlarmMask(uint8_t AlarmMask) {
 	/*--- Set alarm mask ---*/

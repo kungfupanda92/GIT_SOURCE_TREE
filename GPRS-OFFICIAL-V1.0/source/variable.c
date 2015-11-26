@@ -36,18 +36,15 @@ _program_counter program_counter;
 //-------------------------------------------------------------------------------------------------
 //variable for RTC
 unsigned int half_hour;
-_RTC_time set_time, current_time;
+//_RTC_time set_time, current_time;
 _RTC_time time_server;
 uint16_t time_auto_read;
 _rtc_flag rtc_flag;
 __attribute ((aligned(32))) char my_bl_data[256];
 //-------------------------------------------------------------------------------------------------
-_freeze_data free_data;
+//_freeze_data free_data;
 char freeze_code[] =
 		"A08E10901190129013901490109180A011B612B613B621B622B623B630B631B632B633B640B641B642B643B650B651B652B653B610A060B60E302090209110B011A011B012A012B013A013B014A014B0";
-
-//char freeze_code[] =
-//"A08E10901190129013901490109180A011B612B613B621B622B623B630B631B632B633B640B641B642B643B650B651B652B653B610A060B60E302090209111A012A013A014A0";
 
 uint16_t table_control_code[LEN_BUFF_FREEZE][4] = { { 0x1090, 0x9010, 0, 8 }, {
 		0x1190, 0x9011, 0, 8 }, { 0x1290, 0x9012, 0, 8 },

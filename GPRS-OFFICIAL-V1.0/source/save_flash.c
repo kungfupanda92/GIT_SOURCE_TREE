@@ -8,7 +8,6 @@ extern char buffer_frezze[];
 extern _rtc_flag rtc_flag;
 extern char freeze_code[];
 extern char buf_send_server[];
-//extern unsigned char my_bl_data[512];
 extern __attribute ((aligned(32))) char my_bl_data[256];
 uint32_t day_sector[] = { 0x00001000, 0x00002800, 0x00004000, 0x00005800 };
 /* P R I V A T E   F U N C T I O N   P R O T O T Y P E S */
@@ -17,10 +16,12 @@ uint32_t check_sector_current(void);
 uint32_t check_add_current(uint8_t day_current);
 void prepare_freeze_frame(void);
 
-void check_int_min(void) {
-	if (rtc_flag.bits.counter_minute == 0)
+//-----------------------------------------------------------------------------------------------
+void check_freeze_data (void){
+	if (rtc_flag.bits.auto_save_data == 0)
 		return;
-	rtc_flag.bits.counter_minute = 0;
+
+	rtc_flag.bits.auto_save_data = 0;	//clear flag
 	#ifdef CHECK_MIN
 		printf("%u--%u--%u--%u--%u--\r", MONTH,DOM,HOUR,MIN,SEC);
 		printf("half_hour=%u\r",half_hour);
@@ -29,7 +30,7 @@ void check_int_min(void) {
 	
 	freeze_frame();
 }
-
+//----------------------------------------------------------------------------------------------
 uint32_t check_sector_current(void) {
 	uint8_t *ptr_add;
 
@@ -214,53 +215,7 @@ uint8_t check_id(void){
 			return 0;
 		}
 	}
-	return 1;
+	return 1; //No change ID
 }
 
-void test_save(void) {
-//	unsigned char temp[256];
-//	uint32_t i, add;
-////printf("0\r");
-
-//	add = 0x1000;
-//	for (i = 0; i < 256; i++)	//Copy data to be written to flash into the RAM
-//			{
-//		my_bl_data[i] = 0x35;
-//	}
-
-//	iap_Write(0x001000);
-//	iap_Write(0x001000 + 256);
-//	iap_Write(0x001000 + 512);
-//	iap_Write(0x001000 + 768);
-//	iap_Write(0x002000);
-
-//	iap_Erase(0x002000);
-//	iap_Write(0x002000);
-//	iap_Read(0x001000, temp, sizeof(temp));
-//	for (i = 0; i < 256; i++)	//Copy data to be written to flash into the RAM
-//			{
-//		printf("%c", temp[i]);
-//	}
-//	printf("ok 1\r");
-//	iap_Read(0x001000 + 256, temp, sizeof(temp));
-//	for (i = 0; i < 256; i++)	//Copy data to be written to flash into the RAM
-//			{
-//		printf("%c", temp[i]);
-//	}
-//	printf("ok 2\r");
-//	iap_Read(0x001000 + 512, temp, sizeof(temp));
-//	for (i = 0; i < 256; i++)	//Copy data to be written to flash into the RAM
-//			{
-//		printf("%c", temp[i]);
-//	}
-//	printf("ok 3\r");
-//	iap_Read(0x001000 + 768, temp, sizeof(temp));
-//	for (i = 0; i < 256; i++)	//Copy data to be written to flash into the RAM
-//			{
-//		printf("%c", temp[i]);
-//	}
-
-//	printf("ok baby\r");
-
-}
 

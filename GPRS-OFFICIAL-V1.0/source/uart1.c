@@ -7,6 +7,7 @@ void initUart1(uint32_t baudrate){
 	VICIntEnClr = 1 << 7;	/* Disable Interrupt */
 
 	PINSEL0 |= 0x00050000; // /* Enable RxD1 and TxD1              */
+	//PINSEL0 &= 0xFFFAFFFF; // /* Enable RxD1 and TxD1              */
 	
 	U1LCR = 0x83; // set DLAB=1 so we can set divisor bits
 								//* 8 bits, no Parity, 1 Stop bit     */

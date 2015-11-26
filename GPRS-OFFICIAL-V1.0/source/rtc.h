@@ -41,7 +41,7 @@ void RTC_stop(void);
 void RTC_CTCReset(void);
 void RTC_SetTime(_RTC_time time);
 void RTC_SetAlarm(_RTC_time Alarm);
-void RTC_GetTime (void);
+//void RTC_GetTime (void);
 void RTC_SetAlarmMask(uint8_t AlarmMask);
 
 #endif /* end __RTC_H */

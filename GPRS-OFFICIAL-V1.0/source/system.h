@@ -109,7 +109,7 @@ typedef union {
 		unsigned alarm_hour :1;
 		unsigned auto_save_data :1;
 		
-		unsigned mode_save_halft_hour :1;
+		//unsigned mode_save_halft_hour :1;
 	} bits;
 	uint8_t data_bits;
 } _rtc_flag;

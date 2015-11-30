@@ -1,6 +1,7 @@
 #include "main.h"
 //how are you
 //*****-----*****-----*****-----*****-----
+extern _rtc_flag rtc_flag;
 extern _system_flag system_flag;
 //*****-----*****-----
 int main(void) {
@@ -46,6 +47,7 @@ int main(void) {
 			clear_watchdog();
 			prepare_config_mudule();
 			clear_watchdog();
+			check_freeze_data();
 			if (system_flag.bits.CONNECT_OK) {
 				//send_data_to_server();
 				send_command_to_server(COMMAND_LOGIN);
@@ -60,6 +62,7 @@ int main(void) {
 				temp_var = 0;
 				ON_OFF_mudule_GPRS();
 				clear_watchdog();
+				check_freeze_data();
 				//------------------------------------
 				counter_reset_gprs++;//increase counter after reset module gprs
 				//------------------------------------
@@ -86,6 +89,7 @@ int main(void) {
 }
 //----------------------------------------------------------------------------------------
 void var_start(void) {
+	rtc_flag.data_bits = 0x00;
 	system_flag.data_bits = 0x0000;
 	system_flag.bits.TIMEOUT_WAIT_LOGIN = 1;
 }

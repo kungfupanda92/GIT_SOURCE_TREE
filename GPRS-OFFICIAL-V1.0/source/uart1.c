@@ -29,9 +29,9 @@ void initUart1(uint32_t baudrate){
 
 	//Any Slot with Lower Priority than TIMER0's slot will suffice
 
-	VICVectAddr2 = (int)myUart1_ISR; //Pointer Interrupt Function (ISR)
+	VICVectAddr4 = (int)myUart1_ISR; //Pointer Interrupt Function (ISR)
 
-	VICVectCntl2 = 0x20 | 7; 
+	VICVectCntl4 = 0x20 | 7; 
 
 	VICIntEnable |= (1<<7); //Enable Uart0 interrupt , 7th bit=1 	
 }

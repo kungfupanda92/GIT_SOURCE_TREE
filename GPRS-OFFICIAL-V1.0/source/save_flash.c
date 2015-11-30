@@ -106,8 +106,8 @@ void prepare_freeze_frame() {
 	#endif
 	if(strlen(buf_send_server)>=480) 
 		return;
-
-	my_bl_data[0] = MIN;
+	
+	my_bl_data[0] = (half_hour)? 30:0;
 	my_bl_data[1] = HOUR;
 	my_bl_data[2] = DOM;
 	my_bl_data[3] = MONTH;
@@ -140,7 +140,7 @@ void freeze_frame(void) {
 		#ifdef DEBUG_SAVE_FLASH
 		printf("sac=%u\r",current_add);
 		#endif
-		iap_Write(current_add);
+		while(iap_Write(current_add));
 	}
 }
 

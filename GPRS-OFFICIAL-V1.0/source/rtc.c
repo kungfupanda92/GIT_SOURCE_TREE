@@ -9,8 +9,13 @@ __irq void RTCHandler(void) {
 	}
 	if (ILR & ILR_RTCALF) {	//interrupt alarm
 		ILR |= ILR_RTCALF;/* clear interrupt flag */
-		half_hour = (ALMIN)?1:0;
-		ALMIN = (ALMIN)?0:30;
+		rtc_flag.bits.mode_save_halft_hour=0;
+		half_hour=0;
+		if(rtc_flag.bits.mode_save_halft_hour){
+			half_hour = (ALMIN)?1:0;
+			ALMIN = (ALMIN)?0:30;
+		}
+		else ALMIN=0;
 		//rtc_flag.bits.counter_minute = 1;
 		rtc_flag.bits.auto_save_data = 1;
 	}

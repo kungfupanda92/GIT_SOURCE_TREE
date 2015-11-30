@@ -42,6 +42,8 @@ uint32_t check_sector_current(void) {
 	if (*(ptr_add + 2) == DOM)
 		 return 0x4000;
 	
+	errase_day_old();
+	
 	ptr_add = (unsigned char*)0x1000;
 	if (*(ptr_add + 2) == 0xFF){
 		if(HOUR !=0){
@@ -69,8 +71,8 @@ uint32_t check_sector_current(void) {
 		}
 		 return 0x4000;
 	}
-	
-	return 	errase_day_old();
+	iap_Erase_sector(1,6);
+	return 0x1000;
 }
 void prepare_freeze_frame() {
 
@@ -126,10 +128,10 @@ void freeze_frame(void) {
 	uint8_t *ptr_add;
 	
 	static uint8_t mode=0;
-	
-	prepare_freeze_frame();
 
 	current_add= check_sector_current();
+	
+	prepare_freeze_frame();
 
 	current_add += (((uint32_t) HOUR)*2 + half_hour) * 256;
 	
@@ -239,8 +241,8 @@ uint8_t compare_date(_RTC_time day1, _RTC_time day2){
 			else return 0;
 		}
 				
-		}
 	}
+}
 uint32_t errase_day_old(void){
 	uint8_t *ptr_day1;
 	uint8_t *ptr_day2;

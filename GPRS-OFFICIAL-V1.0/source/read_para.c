@@ -28,7 +28,7 @@ extern char temp_data1[50];
 /* T Y P E D E F   N E W    V A R I A B L E */
 /******************************************************************************/
 typedef enum {
-	normal = 0, volt, not_change_data, current_reverse, time_max_demand
+	normal = 0, volt, not_change_data, current_reverse, time_max_demand,in_active_power,in_reactive_power
 } mode_lookup;
 
 /******************************************************************************/
@@ -807,15 +807,30 @@ void read_data_meter(char *frame_tx, uint16_t code, uint16_t index,
 		buff_contain_data_add_send_server[1] = '0';
 		buff_contain_data_add_send_server[2] = buff_contain_data_read_metter[3];
 		buff_contain_data_add_send_server[3] = buff_contain_data_read_metter[0];
-		buff_contain_data_add_send_server[4] = buff_contain_data_read_metter[4];
-		buff_contain_data_add_send_server[5] = buff_contain_data_read_metter[5];
+		buff_contain_data_add_send_server[4] = buff_contain_data_read_metter[5];
+		buff_contain_data_add_send_server[5] = buff_contain_data_read_metter[2];
 		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case time_max_demand:
-		index = 8;
-		len = strlen(buff_contain_data_read_metter);
-		convert_data(buff_contain_data_read_metter,
-				buff_contain_data_add_send_server, len);
+		index = 6;
+		ptr_buffer = buff_contain_data_read_metter;
+		break;
+
+	case in_active_power:
+		buff_contain_data_add_send_server[0] = buff_contain_data_read_metter[5];
+		buff_contain_data_add_send_server[1] = '0';
+		buff_contain_data_add_send_server[2] = buff_contain_data_read_metter[3];
+		buff_contain_data_add_send_server[3] = buff_contain_data_read_metter[4];
+		buff_contain_data_add_send_server[4] = buff_contain_data_read_metter[1];
+		buff_contain_data_add_send_server[5] = buff_contain_data_read_metter[2];
+		ptr_buffer = buff_contain_data_add_send_server;
+		break;
+
+	case in_reactive_power:
+		buff_contain_data_add_send_server[0] = buff_contain_data_read_metter[3];
+		buff_contain_data_add_send_server[1] = buff_contain_data_read_metter[4];
+		buff_contain_data_add_send_server[2] = buff_contain_data_read_metter[1];
+		buff_contain_data_add_send_server[3] = buff_contain_data_read_metter[2];
 		ptr_buffer = buff_contain_data_add_send_server;
 		break;
 	case 0xFF:

@@ -1,6 +1,10 @@
 #include "read_para.h"
 #include "save_flash.h"
+#include "main.h"
 //------------------------------------------------------------------------------
+extern _rtc_flag rtc_flag;
+extern __attribute ((aligned(32))) char my_bl_data[256];
+
 extern char buffer_PLC[MAX_BUFFER];
 extern char commands[COMMANDS];
 extern char buf_send_server[MAX_BUFFER_TX];
@@ -28,7 +32,13 @@ extern char temp_data1[50];
 /* T Y P E D E F   N E W    V A R I A B L E */
 /******************************************************************************/
 typedef enum {
-	normal = 0, volt, not_change_data, current_reverse, time_max_demand,in_active_power,in_reactive_power
+	normal = 0,
+	volt,
+	not_change_data,
+	current_reverse,
+	time_max_demand,
+	in_active_power,
+	in_reactive_power
 } mode_lookup;
 
 /******************************************************************************/
@@ -378,42 +388,55 @@ unsigned char process_server_syntime_module(char *data_server) {
 	strcat(buf_send_server, "0500"); //length data Tx (5 bytes)
 
 	if (strstr(ptr, "1688")) {	//Setup time free_zone
+		if (strstr(ptr, "3000")) {
+			rtc_flag.bits.mode_save_one_hour = 0;
+			iap_Erase_sector(1, 7);
+			StringToHex(my_bl_data, para_plc._ID);
+			my_bl_data[10] = 0;
+			iap_Write(0x7000);
+		} else if (strstr(ptr, "6000")) {
+			iap_Erase_sector(1, 7);
+			StringToHex(my_bl_data, para_plc._ID);
+			my_bl_data[10] = 1;
+			iap_Write(0x7000);
+			rtc_flag.bits.mode_save_one_hour = 1;
+		}
 		strcat(buf_send_server, "0000168800"); //data
 	} else if (strstr(ptr, "3080")) {	//syntime module
 		//Check Time from server
-		time1 = *(ptr + TIME_SYN_MODULE_POS) - 0x30;	//second
+		time1 = *(ptr + TIME_SYN_MODULE_POS) - 0x30;			//second
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 1) - 0x30;
-		second = time1 * 10 + time2;	//convert time to decimal
-		if (second >= 60)	//check second
+		second = time1 * 10 + time2;			//convert time to decimal
+		if (second >= 60)			//check second
 			return false;
 
-		time1 = *(ptr + TIME_SYN_MODULE_POS + 2) - 0x30;	//minute
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 2) - 0x30;			//minute
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 3) - 0x30;
-		minute = time1 * 10 + time2;	//convert time to decimal
-		if (minute >= 60)	//check minute
+		minute = time1 * 10 + time2;			//convert time to decimal
+		if (minute >= 60)			//check minute
 			return false;
 
-		time1 = *(ptr + TIME_SYN_MODULE_POS + 4) - 0x30;	//Hour
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 4) - 0x30;			//Hour
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 5) - 0x30;
-		hour = time1 * 10 + time2;	//convert time to decimal
+		hour = time1 * 10 + time2;			//convert time to decimal
 		if (hour >= 24)
 			return false;
 
-		time1 = *(ptr + TIME_SYN_MODULE_POS + 6) - 0x30;	//Date
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 6) - 0x30;			//Date
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 7) - 0x30;
-		date = time1 * 10 + time2;	//convert time to decimal
+		date = time1 * 10 + time2;			//convert time to decimal
 		if (date >= 32)
 			return false;
 
-		time1 = *(ptr + TIME_SYN_MODULE_POS + 8) - 0x30;	//month
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 8) - 0x30;			//month
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 9) - 0x30;
-		month = time1 * 10 + time2;	//convert time to decimal
+		month = time1 * 10 + time2;			//convert time to decimal
 		if (month >= 13)
 			return false;
 
-		time1 = *(ptr + TIME_SYN_MODULE_POS + 10) - 0x30;	//year
+		time1 = *(ptr + TIME_SYN_MODULE_POS + 10) - 0x30;			//year
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 11) - 0x30;
-		year = time1 * 10 + time2;	//convert time to decimal
+		year = time1 * 10 + time2;			//convert time to decimal
 		if (year >= 100)
 			return false;
 
@@ -424,7 +447,7 @@ unsigned char process_server_syntime_module(char *data_server) {
 		DOM = date;
 		MONTH = month;
 		YEAR = year + 2000;
-		strcat(buf_send_server, "0000308000"); //data
+		strcat(buf_send_server, "0000308000");			//data
 	}
 
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
@@ -477,7 +500,12 @@ unsigned char process_server_readtime_module(char *data_server) {
 	} else if (strstr(ptr, "1688")) { //Doc chu ky chot data
 		strcat(buf_send_server, "0C00"); //length data Tx (16 bytes)
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		strcat(buf_send_server, "3000"); //data - 30p
+
+		if (rtc_flag.bits.mode_save_one_hour == 1) {
+			strcat(buf_send_server, "6000"); //data - 60p
+		} else {
+			strcat(buf_send_server, "3000"); //data - 30p
+		}
 	}
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);
@@ -644,7 +672,8 @@ flag_system load_data_meter(char* code_4_byte, char* data, unsigned char mode) {
 	clear_para(ACK, NULL, true);
 	//write commands
 	if (mode == 0)
-		sprintf(temp_data1, "%cW2%c%s(%s)%c", SOH, STX, code_4_byte, data, ETX);
+		sprintf(temp_data1, "%cW2%c%s(%s)%c", SOH, STX, code_4_byte, data,
+		ETX);
 	else
 		sprintf(temp_data1, "%cW2%c%s(01%s)%c", SOH, STX, code_4_byte, data,
 		ETX);

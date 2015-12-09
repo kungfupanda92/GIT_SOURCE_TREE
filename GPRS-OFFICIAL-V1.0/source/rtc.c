@@ -10,14 +10,16 @@ __irq void RTCHandler(void) {
 			rtc_flag.bits.auto_save_data = 1;
 			half_hour = 0;
 		}
-		else if (MIN == 30) {
-			rtc_flag.bits.auto_save_data = 1;
-			half_hour = 1;
+		if (rtc_flag.bits.mode_save_one_hour == 0) {
+			if (MIN == 30) {
+				rtc_flag.bits.auto_save_data = 1;
+				half_hour = 1;
+			}
 		}
 	}
 	if (ILR & ILR_RTCALF) {	//interrupt alarm
 		ILR |= ILR_RTCALF;/* clear interrupt flag */
-		
+
 	}
 	VICVectAddr = 0; /* Acknowledge Interrupt */
 }
@@ -31,10 +33,12 @@ void RTC_init(void) {
 	//---------------------------
 	CCR = 2;
 	CCR = 0;
-	PREINT = PREINT_RTC;
-	PREFRAC = PREFRAC_RTC;
+	PREINT = PREINT_RTC
+	;
+	PREFRAC = PREFRAC_RTC
+	;
 	// enable interrupts RTC for each second changed
-	VICVectAddr2 = (unsigned) RTCHandler; 		//Set the timer ISR vector address
+	VICVectAddr2 = (unsigned) RTCHandler; 	//Set the timer ISR vector address
 	VICVectCntl2 = 0x20 | 13;					//Set channel
 	VICIntEnable |= (1 << 13);					//Enable the interrupt
 	return;
@@ -79,18 +83,18 @@ void RTC_SetAlarm(_RTC_time Alarm) {
 }
 //--------------------------------------------------------------------------------------
 /*
-void RTC_GetTime (void) {
+ void RTC_GetTime (void) {
 
-	current_time.second = SEC;
-	current_time.minute = MIN;
-	current_time.hour = HOUR;
-	current_time.day_of_month = DOM;
-	current_time.day_of_week = DOW;
-	current_time.day_of_year = DOY;
-	current_time.month = MONTH;
-	current_time.year = YEAR;
-}
-*/
+ current_time.second = SEC;
+ current_time.minute = MIN;
+ current_time.hour = HOUR;
+ current_time.day_of_month = DOM;
+ current_time.day_of_week = DOW;
+ current_time.day_of_year = DOY;
+ current_time.month = MONTH;
+ current_time.year = YEAR;
+ }
+ */
 //--------------------------------------------------------------------------------------
 void RTC_SetAlarmMask(uint8_t AlarmMask) {
 	/*--- Set alarm mask ---*/

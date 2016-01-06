@@ -298,7 +298,7 @@ unsigned char process_server_reading_data_save(char *data_server) {
 	strncat(buf_send_server, ptr + CHECKCOUNT_POS, 4);	//checkcount
 	strcat(buf_send_server, "68");	//restart code
 	strcat(buf_send_server, "B5");	//control code
-	strcat(buf_send_server, "C500"); //length data Tx (temp: for it = 0000)
+	strcat(buf_send_server, "AD00"); //length data Tx (temp: for it = 0000)
 
 	buf_send_server[22] = '0';		//Tong So khung hinh
 	buf_send_server[23] = '1';
@@ -334,8 +334,8 @@ unsigned char process_server_reading_data_save(char *data_server) {
 	buf_send_server[54] = para_plc._ID[1];
 	buf_send_server[55] = para_plc._ID[0];
 
-	buf_send_server[56] = 'B';
-	buf_send_server[57] = '3';
+	buf_send_server[56] = '9';//B
+	buf_send_server[57] = 'B';//3
 
 	buf_send_server[58] = NULL;
 
@@ -394,7 +394,7 @@ unsigned char process_server_syntime_module(char *data_server) {
 			StringToHex(my_bl_data, para_plc._ID);
 			my_bl_data[10] = 0;
 			iap_Write(0x7000);
-		} else if (strstr(ptr, "6000")) {
+		} else {
 			iap_Erase_sector(1, 7);
 			StringToHex(my_bl_data, para_plc._ID);
 			my_bl_data[10] = 1;
@@ -502,11 +502,19 @@ unsigned char process_server_readtime_module(char *data_server) {
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
 
 		if (rtc_flag.bits.mode_save_one_hour == 1) {
-			strcat(buf_send_server, "6000"); //data - 60p
+			strcat(buf_send_server, "0001"); //data - 60p
 		} else {
 			strcat(buf_send_server, "3000"); //data - 30p
 		}
 	}
+	else if (strstr(ptr, "0988")){
+		strcat(buf_send_server, "1600");
+		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+		strcat(buf_send_server, "0100060116200000"); //virsion FW GPRS
+		strcat(buf_send_server, "0A88");//code HW
+		strcat(buf_send_server, "0601");//virsion HW GPRS
+	}
+	
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);
 	strcat(buf_send_server, "16");

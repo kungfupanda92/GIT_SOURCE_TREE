@@ -193,6 +193,7 @@ void freeze_frame(void) {
 	}
 }
 
+
 uint32_t check_add_current(uint8_t day_current) {
 	uint8_t *ptr_add;
 
@@ -245,7 +246,7 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 		sprintf(string_data, "%02u", buffer_frezze[i]);
 		strcat(return_buff, string_data);
 	}
-	for (i = 5; i < 179; i++) {
+	for (i = 5; i < 155; i++) {
 		sprintf(string_data, "%02X", buffer_frezze[i]);
 		strcat(return_buff, string_data);
 	}

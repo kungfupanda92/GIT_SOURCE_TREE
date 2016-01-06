@@ -67,7 +67,7 @@ I (E:\WORKSPACE_GIT\GPRS\GPRS-OFFICIAL-V1.0\source\wdt.h)(0x5648AB98)
 I (E:\WORKSPACE_GIT\GPRS\GPRS-OFFICIAL-V1.0\source\rtc.h)(0x564DC2CA)
 I (E:\WORKSPACE_GIT\GPRS\GPRS-OFFICIAL-V1.0\source\iap.h)(0x5648AB98)
 I (E:\WORKSPACE_GIT\GPRS\GPRS-OFFICIAL-V1.0\source\save_flash.h)(0x565C389C)
-F (.\source\read_para.c)(0x566530FF)(-c --cpu ARM7TDMI -g -O0 --apcs=interwork -I.\source-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Philips-o .\obj\read_para.o --omf_browse .\obj\read_para.crf --depend .\obj\read_para.d)
+F (.\source\read_para.c)(0x566E5C97)(-c --cpu ARM7TDMI -g -O0 --apcs=interwork -I.\source-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Philips-o .\obj\read_para.o --omf_browse .\obj\read_para.crf --depend .\obj\read_para.d)
 I (E:\WORKSPACE_GIT\GPRS\GPRS-OFFICIAL-V1.0\source\read_para.h)(0x5648AB98)
 I (C:\Keil\ARM\ARMCC\include\stdbool.h)(0x51C7C554)
 I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C7C554)

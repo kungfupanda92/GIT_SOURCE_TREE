@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "read_para.h"
 
-#define LEN_BUFF_FREEZE		245
+#define LEN_BUFF_FREEZE		246
 #define MAX_BUFFER					1000
 #define MAX_BUFFER_RX				1000
 #define MAX_BUFFER_TX 				1000

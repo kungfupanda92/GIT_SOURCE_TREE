@@ -510,7 +510,7 @@ unsigned char process_server_readtime_module(char *data_server) {
 	else if (strstr(ptr, "0988")){
 		strcat(buf_send_server, "1600");
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		strcat(buf_send_server, "0100060116200000"); //virsion FW GPRS
+		strcat(buf_send_server, "0100040216200000"); //virsion FW GPRS
 		strcat(buf_send_server, "0A88");//code HW
 		strcat(buf_send_server, "0601");//virsion HW GPRS
 	}

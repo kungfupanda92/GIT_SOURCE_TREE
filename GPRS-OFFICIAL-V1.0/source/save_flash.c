@@ -266,13 +266,13 @@ uint8_t check_id(void) {
 		if (*(ptr_add + i) != hexstring[i]) {
 			iap_Erase_sector(1, 7);
 			StringToHex(my_bl_data, para_plc._ID);
-			my_bl_data[10] = 1;
+			my_bl_data[10] = 0;
 			iap_Write(0x7000);
 #ifdef CHECK_ID
 			printf("erase ok\r");
 #endif
 			/*----set mode default one hour-----*/
-			rtc_flag.bits.mode_save_one_hour = 1;
+			rtc_flag.bits.mode_save_one_hour = 0;
 			return 0;
 		}
 	}

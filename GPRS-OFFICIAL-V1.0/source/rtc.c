@@ -6,6 +6,8 @@ extern _rtc_flag rtc_flag;
 __irq void RTCHandler(void) {
 	if (ILR & ILR_RTCCIF) {	//interrupt counter
 		ILR |= ILR_RTCCIF; /* clear interrupt flag */
+		if (MIN == 15 || MIN == 45)
+			rtc_flag.bits.have_time_300F = 1;
 		if (MIN == 0) {
 			rtc_flag.bits.auto_save_data = 1;
 			half_hour = 0;

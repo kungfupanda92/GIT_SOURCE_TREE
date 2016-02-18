@@ -1,5 +1,6 @@
 #include "main.h"
 //hello baby
+
 //*****-----*****-----*****-----*****-----
 extern _rtc_flag rtc_flag;
 extern _system_flag system_flag;
@@ -35,6 +36,7 @@ int main(void) {
 	RTC_start();
 	//---------------------
 	printf("hello baby\r");
+	rtc_flag.bits.have_time_300F = 1;
 	while (1) {
 		temp_var = 0;
 		counter_reset_gprs = 0;			//clear counter in the main loop

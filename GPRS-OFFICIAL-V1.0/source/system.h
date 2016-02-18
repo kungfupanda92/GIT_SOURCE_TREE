@@ -108,7 +108,9 @@ typedef union {
 		unsigned alarm_minute :1;
 		unsigned alarm_hour :1;
 		unsigned auto_save_data :1;
-		
+		unsigned have_data_300F :1;
+		unsigned have_time_300F :1;
+
 		unsigned mode_save_one_hour :1;
 	} bits;
 	uint16_t data_bits;

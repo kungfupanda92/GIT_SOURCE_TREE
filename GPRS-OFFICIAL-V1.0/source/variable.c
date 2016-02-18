@@ -11,6 +11,7 @@ _system_flag system_flag;
 
 char buffer_PLC[MAX_BUFFER];
 char buf_send_server[MAX_BUFFER_TX];
+char buff_frame_300F[100];
 char commands[COMMANDS];
 char buffer_frezze[200];
 //--------------------------------------------------

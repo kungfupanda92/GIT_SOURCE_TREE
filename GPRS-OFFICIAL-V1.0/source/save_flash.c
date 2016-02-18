@@ -8,6 +8,7 @@ extern char buffer_frezze[];
 extern _rtc_flag rtc_flag;
 extern char freeze_code[];
 extern char buf_send_server[];
+extern char buff_frame_300F[];
 extern __attribute ((aligned(32))) char my_bl_data[256];
 uint32_t day_sector[] = { 0x00001000, 0x00002800, 0x00004000, 0x00005800 };
 /* P R I V A T E   F U N C T I O N   P R O T O T Y P E S */
@@ -18,6 +19,16 @@ void prepare_freeze_frame(void);
 
 //-----------------------------------------------------------------------------------------------
 void check_freeze_data(void) {
+
+	if (rtc_flag.bits.have_time_300F == 1) {
+		rtc_flag.bits.have_time_300F = 0;
+		//save frame 300F
+		/*---------Sign in meter----------*/
+		sign_in();
+		buff_frame_300F[0] = 0;
+		read_data_meter(buff_frame_300F, 0x0F30, 0, 1);
+		rtc_flag.bits.have_data_300F = 1;
+	}
 	if (rtc_flag.bits.auto_save_data == 0)
 		return;
 
@@ -137,7 +148,12 @@ void prepare_freeze_frame() {
 		strncpy(four_bytes, freeze_code + i, 4);
 		four_bytes[4] = 0;
 		hex_server = (uint16_t) strtol(four_bytes, NULL, 16);
-		read_data_meter(buf_send_server, hex_server, 0, 1);
+
+		if (hex_server == 0x0F30 && rtc_flag.bits.have_data_300F == 1) {
+			rtc_flag.bits.have_data_300F = 0;
+			strcat(buf_send_server, buff_frame_300F);
+		} else
+			read_data_meter(buf_send_server, hex_server, 0, 1);
 		i += 4;
 
 	} while (i < len);
@@ -193,7 +209,6 @@ void freeze_frame(void) {
 	}
 }
 
-
 uint32_t check_add_current(uint8_t day_current) {
 	uint8_t *ptr_add;
 
@@ -229,7 +244,8 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 		return 0;
 
 	if (rtc_flag.bits.mode_save_one_hour == 1) {
-		if(Time_server.minute !=0) return 0;
+		if (Time_server.minute != 0)
+			return 0;
 		current_add += (uint32_t)(Time_server.hour) * 256;
 	} else {
 		_half_hour = (Time_server.minute) ? 1 : 0;

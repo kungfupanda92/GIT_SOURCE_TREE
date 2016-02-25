@@ -334,8 +334,8 @@ unsigned char process_server_reading_data_save(char *data_server) {
 	buf_send_server[54] = para_plc._ID[1];
 	buf_send_server[55] = para_plc._ID[0];
 
-	buf_send_server[56] = '9';//B
-	buf_send_server[57] = 'B';//3
+	buf_send_server[56] = '9';	//B
+	buf_send_server[57] = 'B';	//3
 
 	buf_send_server[58] = NULL;
 
@@ -345,7 +345,7 @@ unsigned char process_server_reading_data_save(char *data_server) {
 	strncat(temp_data1, ptr + TIME_FREEZE_DATA_POS, 10);	//time
 	StringToHex(buff_time, temp_data1);
 	//set time
-	time_server.day_of_year = bcd2hex(buff_time[0]);
+	time_server.year = bcd2hex(buff_time[0]);
 	time_server.month = bcd2hex(buff_time[1]);
 	time_server.day_of_month = bcd2hex(buff_time[2]);
 	time_server.hour = bcd2hex(buff_time[3]);
@@ -375,6 +375,7 @@ unsigned char process_server_syntime_module(char *data_server) {
 	char string_lenght[4];
 	unsigned char time1, time2;
 	unsigned char second, minute, hour, date, month, year;
+	char code_str[10];
 
 	ptr = data_server;	//change pointer
 
@@ -387,8 +388,10 @@ unsigned char process_server_syntime_module(char *data_server) {
 	strcat(buf_send_server, "86");	//control code
 	strcat(buf_send_server, "0500"); //length data Tx (5 bytes)
 
-	if (strstr(ptr, "1688")) {	//Setup time free_zone
-		if (strstr(ptr, "3000")) {
+	code_str[0] = 0;
+	strncat(code_str, ptr + 34, 8);
+	if (strstr(code_str, "1688")) {	//Setup time free_zone
+		if (strstr(code_str, "3000")) {
 			rtc_flag.bits.mode_save_one_hour = 0;
 			iap_Erase_sector(1, 7);
 			StringToHex(my_bl_data, para_plc._ID);
@@ -402,7 +405,7 @@ unsigned char process_server_syntime_module(char *data_server) {
 			rtc_flag.bits.mode_save_one_hour = 1;
 		}
 		strcat(buf_send_server, "0000168800"); //data
-	} else if (strstr(ptr, "3080")) {	//syntime module
+	} else if (strstr(code_str, "3080")) {	//syntime module
 		//Check Time from server
 		time1 = *(ptr + TIME_SYN_MODULE_POS) - 0x30;			//second
 		time2 = *(ptr + TIME_SYN_MODULE_POS + 1) - 0x30;
@@ -461,6 +464,7 @@ unsigned char process_server_readtime_module(char *data_server) {
 	char *ptr;
 	char string_lenght[4];
 	char tem_data[15];
+	char code_str[5];
 
 	ptr = data_server;	//change pointer
 
@@ -472,7 +476,9 @@ unsigned char process_server_readtime_module(char *data_server) {
 	strcat(buf_send_server, "68");	//restart code
 	strcat(buf_send_server, "81");	//control code
 
-	if (strstr(ptr, "3080")) {	//read time module
+	code_str[0] = 0;
+	strncat(code_str, ptr + 38, 4);
+	if (strstr(code_str, "3080")) {	//read time module
 		//prepare time
 		tem_data[0] = (SEC / 10) + 0x30;
 		tem_data[1] = (SEC % 10) + 0x30;
@@ -497,7 +503,7 @@ unsigned char process_server_readtime_module(char *data_server) {
 		strcat(buf_send_server, "1000"); //length data Tx (16 bytes)
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
 		strncat(buf_send_server, tem_data, 12); //data of rx frame
-	} else if (strstr(ptr, "1688")) { //Doc chu ky chot data
+	} else if (strstr(code_str, "1688")) { //Doc chu ky chot data
 		strcat(buf_send_server, "0C00"); //length data Tx (16 bytes)
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
 
@@ -506,15 +512,14 @@ unsigned char process_server_readtime_module(char *data_server) {
 		} else {
 			strcat(buf_send_server, "3000"); //data - 30p
 		}
-	}
-	else if (strstr(ptr, "0988")){
+	} else if (strstr(code_str, "0988")) {
 		strcat(buf_send_server, "1600");
 		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		strcat(buf_send_server, "0100040216200000"); //virsion FW GPRS
-		strcat(buf_send_server, "0A88");//code HW
-		strcat(buf_send_server, "0601");//virsion HW GPRS
+		strcat(buf_send_server, "0100230216200000"); //virsion FW GPRS
+		strcat(buf_send_server, "0A88"); //code HW
+		strcat(buf_send_server, "0601"); //virsion HW GPRS
 	}
-	
+
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);
 	strcat(buf_send_server, "16");

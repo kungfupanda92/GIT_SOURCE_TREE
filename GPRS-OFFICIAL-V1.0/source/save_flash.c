@@ -14,7 +14,7 @@ uint32_t day_sector[] = { 0x00001000, 0x00002800, 0x00004000, 0x00005800 };
 /* P R I V A T E   F U N C T I O N   P R O T O T Y P E S */
 
 uint32_t check_sector_current(void);
-uint32_t check_add_current(uint8_t day_current);
+uint32_t check_add_current(_RTC_time day_current);
 void prepare_freeze_frame(void);
 
 //-----------------------------------------------------------------------------------------------
@@ -185,72 +185,70 @@ void prepare_freeze_frame() {
 	}
 #endif
 }
+uint32_t check_add_free(void) {
+	uint32_t index;
+	uint8_t *ptr;
+	ptr = (uint8_t*) 0x1000;
+	index = 0;
+	while (index < 0x6000) {
+		if (*(ptr + index) == 0xFF) {
+			if (*(ptr + index + 256) != 0xFF) {
+				if (index >= 0x5F00) {
+					iap_Erase(0x1000);
+					index = 0;
+				} else
+					iap_Erase(index + 0x1000 + 256);
+			}
+			return index + 0x1000;
+		}
+		index += 256;
+	}
+	iap_Erase_sector(1, 6);
+	return 0x1000;
+}
+
 void freeze_frame(void) {
 	uint32_t current_add;
-	uint8_t *ptr_add;
 
-	current_add = check_sector_current();
+	current_add = check_add_free();
 
 	prepare_freeze_frame();
 
-	if (rtc_flag.bits.mode_save_one_hour == 1) {
-		current_add += (uint32_t) HOUR * 256;
-	} else {
-		current_add += (((uint32_t) HOUR) * 2 + half_hour) * 256;
-	}
+	while (iap_Write(current_add))
+		;
 
-	ptr_add = (unsigned char*) current_add;
-	if (*(ptr_add) == 0xFF) { //dam bao dia chi can luu luon trong
-#ifdef DEBUG_SAVE_FLASH
-			printf("sac=%u\r",current_add);
-#endif
-		while (iap_Write(current_add))
-			;
-	}
 }
 
-uint32_t check_add_current(uint8_t day_current) {
-	uint8_t *ptr_add;
+uint32_t check_add_current(_RTC_time day_current) {
 
-	ptr_add = (unsigned char*) 0x1000;
-	if (*(ptr_add + 2) == day_current)
-		return 0x1000;
-
-	if (rtc_flag.bits.mode_save_one_hour == 1) {
-		ptr_add = (unsigned char*) 0x2800;
-		if (*(ptr_add + 2) == day_current)
-			return 0x2800;
+	uint32_t index;
+	uint8_t *ptr;
+	ptr = (uint8_t*) 0x1000;
+	index = 0;
+	while (index < 0x6000) {
+		if (*(ptr + index + 1) == day_current.hour) {
+			if (*(ptr + index) == day_current.minute) {
+				if (*(ptr + index + 2) == day_current.day_of_month
+						&& *(ptr + index + 3) == day_current.month
+						&& *(ptr + index + 4) == day_current.year) {
+					//
+					return index + 0x1000;
+				}
+			}
+		}
+		index += 256;
 	}
-
-	ptr_add = (unsigned char*) 0x4000;
-	if (*(ptr_add + 2) == day_current)
-		return 0x4000;
-
-	if (rtc_flag.bits.mode_save_one_hour == 1) {
-		ptr_add = (unsigned char*) 0x5800;
-		if (*(ptr_add + 2) == day_current)
-			return 0x5800;
-	}
-
 	return 0;
 }
+
 uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
-	uint32_t _half_hour;
 	char string_data[4];
 	uint32_t current_add, i;
-	uint8_t *ptr_add;
-	current_add = check_add_current(Time_server.day_of_month);
+	uint8_t * ptr_add;
+
+	current_add = check_add_current(Time_server);
 	if (current_add == 0)
 		return 0;
-
-	if (rtc_flag.bits.mode_save_one_hour == 1) {
-		if (Time_server.minute != 0)
-			return 0;
-		current_add += (uint32_t)(Time_server.hour) * 256;
-	} else {
-		_half_hour = (Time_server.minute) ? 1 : 0;
-		current_add += (((uint32_t) Time_server.hour) * 2 + _half_hour) * 256;
-	}
 
 	ptr_add = (unsigned char*) current_add;
 	if (*(ptr_add + 5) != 0xC3) { //dam bao co data
@@ -270,7 +268,7 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 }
 //====================================================================
 uint8_t check_id(void) {
-	uint8_t *ptr_add;
+	uint8_t * ptr_add;
 	uint8_t i;
 	char hexstring[7];
 
@@ -361,10 +359,10 @@ uint32_t errase_day_old(void) {
 	current.month = MONTH;
 	current.year = (uint8_t)(YEAR - 2000);
 
-	//printf("Day1:%u--%u--%u\r", day1.day_of_month,day1.month,day1.year);
-	//printf("Day2:%u--%u--%u\r", day2.day_of_month,day2.month,day2.year);
-	//printf("current:%u--%u--%u\r", current.day_of_month,current.month,current.year);
-	//printf("whe:%u\r",compare_date(day1,day2));
+//printf("Day1:%u--%u--%u\r", day1.day_of_month,day1.month,day1.year);
+//printf("Day2:%u--%u--%u\r", day2.day_of_month,day2.month,day2.year);
+//printf("current:%u--%u--%u\r", current.day_of_month,current.month,current.year);
+//printf("whe:%u\r",compare_date(day1,day2));
 
 	if (compare_date(day1, day2) == 1) {
 		if (compare_date(current, day1) == 1) {

@@ -1,13 +1,14 @@
 #ifndef SAVE_FLASH_H_
 #define SAVE_FLASH_H_
 
-
 #include "main.h"
 /* P U B L I C   F U N C T I O N   P R O T O T Y P E S */
 
 void check_freeze_data(void);
 
 void test_save(void);
+
+uint32_t check_add_free(void);
 
 void freeze_frame(void);
 

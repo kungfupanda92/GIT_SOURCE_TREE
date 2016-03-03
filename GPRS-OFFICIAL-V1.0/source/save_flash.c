@@ -10,6 +10,8 @@ extern char freeze_code[];
 extern char buf_send_server[];
 extern char buff_frame_300F[];
 extern __attribute ((aligned(32))) char my_bl_data[256];
+
+extern unsigned int total_times;
 uint32_t day_sector[] = { 0x00001000, 0x00002800, 0x00004000, 0x00005800 };
 /* P R I V A T E   F U N C T I O N   P R O T O T Y P E S */
 
@@ -240,7 +242,28 @@ uint32_t check_add_current(_RTC_time day_current) {
 	}
 	return 0;
 }
+void read_time_offline(char * return_buff) {
+	char string_data[4];
+	uint8_t * ptr_add;
+	uint16_t  i;
+	ptr_add = (unsigned char*) 0x7000;
 
+	sprintf(string_data, "%02X", *(ptr_add + 11));
+	strcat(return_buff, string_data);
+	sprintf(string_data, "%02X", *(ptr_add + 12));
+	strcat(return_buff, string_data);
+
+	strcat(return_buff, "3380");
+
+//	time_loop = (total_times > 9) ? 10 : total_times;
+//	time_loop *= 5;
+
+	for (i = 0; i < 50; i++) {
+		sprintf(string_data, "%02X", *(ptr_add + i + 13));
+		strcat(return_buff, string_data);
+	}
+
+}
 uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 	char string_data[4];
 	uint32_t current_add, i;
@@ -270,6 +293,7 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff) {
 uint8_t check_id(void) {
 	uint8_t * ptr_add;
 	uint8_t i;
+	unsigned int low, high;
 	char hexstring[7];
 
 	ptr_add = (unsigned char*) 0x7000;
@@ -281,12 +305,15 @@ uint8_t check_id(void) {
 			iap_Erase_sector(1, 7);
 			StringToHex(my_bl_data, para_plc._ID);
 			my_bl_data[10] = 0;
+			my_bl_data[11] = 0;
+			my_bl_data[12] = 0;
 			iap_Write(0x7000);
 #ifdef CHECK_ID
 			printf("erase ok\r");
 #endif
 			/*----set mode default one hour-----*/
 			rtc_flag.bits.mode_save_one_hour = 0;
+			total_times = 0;
 			return 0;
 		}
 	}
@@ -294,9 +321,40 @@ uint8_t check_id(void) {
 		rtc_flag.bits.mode_save_one_hour = 1;
 	else
 		rtc_flag.bits.mode_save_one_hour = 0;
+
+	low = *(ptr_add + 11);
+	high = *(ptr_add + 12);
+	total_times = (high << 8) + low;
+
 	return 1; //No change ID
 }
 
+void save_time_offline(char* time_off) {
+	uint8_t *ptr_add;
+	uint8_t i;
+	ptr_add = (unsigned char*) 0x7000;
+
+	total_times++;
+	for (i = 0; i <= 10; i++) {
+		my_bl_data[i] = *(ptr_add + i);
+	}
+	my_bl_data[11] = total_times & 0xFF;
+	my_bl_data[12] = (total_times & 0xFF00) >> 8;
+
+	StringToHex(my_bl_data + 13, time_off);
+	if (total_times < 10) {
+		for (i = 0; i < 5 * total_times; i++) {
+			my_bl_data[i + 18] = *(ptr_add + i + 13);
+		}
+	} else {
+		for (i = 0; i < 50; i++) {
+			my_bl_data[i + 18] = *(ptr_add + i + 13);
+		}
+	}
+
+	iap_Erase(0x7000);
+	iap_Write(0x7000);
+}
 //====================================================================
 uint8_t check_day_ok(unsigned long add_day) {
 	unsigned char *ptr;

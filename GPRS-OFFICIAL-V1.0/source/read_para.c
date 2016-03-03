@@ -4,6 +4,7 @@
 //------------------------------------------------------------------------------
 extern _rtc_flag rtc_flag;
 extern __attribute ((aligned(32))) char my_bl_data[256];
+extern unsigned int total_times;
 
 extern char buffer_PLC[MAX_BUFFER];
 extern char commands[COMMANDS];
@@ -372,10 +373,12 @@ unsigned char process_server_reading_data_save(char *data_server) {
 //---------------------------------------------------------------------------------------
 unsigned char process_server_syntime_module(char *data_server) {
 	char *ptr;
+	unsigned int i ;
 	char string_lenght[4];
 	unsigned char time1, time2;
 	unsigned char second, minute, hour, date, month, year;
 	char code_str[10];
+	uint8_t * ptr_add;
 
 	ptr = data_server;	//change pointer
 
@@ -390,19 +393,30 @@ unsigned char process_server_syntime_module(char *data_server) {
 
 	code_str[0] = 0;
 	strncat(code_str, ptr + 34, 8);
+
 	if (strstr(code_str, "1688")) {	//Setup time free_zone
+		ptr_add = (unsigned char*) 0x7000;
 		if (strstr(code_str, "3000")) {
 			rtc_flag.bits.mode_save_one_hour = 0;
-			iap_Erase_sector(1, 7);
 			StringToHex(my_bl_data, para_plc._ID);
 			my_bl_data[10] = 0;
+			for (i = 0; i < 52; i++) {
+				my_bl_data[i + 11] = *(ptr_add + i + 11);
+			}
+
+			iap_Erase_sector(1, 7);
 			iap_Write(0x7000);
 		} else {
-			iap_Erase_sector(1, 7);
+			rtc_flag.bits.mode_save_one_hour = 1;
 			StringToHex(my_bl_data, para_plc._ID);
 			my_bl_data[10] = 1;
+			for (i = 0; i < 52; i++) {
+				my_bl_data[i + 11] = *(ptr_add + i + 11);
+			}
+
+			iap_Erase_sector(1, 7);
 			iap_Write(0x7000);
-			rtc_flag.bits.mode_save_one_hour = 1;
+
 		}
 		strcat(buf_send_server, "0000168800"); //data
 	} else if (strstr(code_str, "3080")) {	//syntime module
@@ -518,6 +532,17 @@ unsigned char process_server_readtime_module(char *data_server) {
 		strcat(buf_send_server, "0100230216200000"); //virsion FW GPRS
 		strcat(buf_send_server, "0A88"); //code HW
 		strcat(buf_send_server, "0601"); //virsion HW GPRS
+	} else if (strstr(code_str, "3280")) {
+//		if (total_times < 10) {
+//			sprintf(string_lenght, "%02X", 5 * total_times + 14);
+//		} else {
+//			sprintf(string_lenght, "%02X", 50 + 14);
+//		}
+		sprintf(string_lenght, "%02X", 50 + 14);
+		strcat(buf_send_server, string_lenght);
+		strcat(buf_send_server, "00");
+		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+		read_time_offline(buf_send_server);
 	}
 
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
@@ -747,7 +772,7 @@ void write_data_metter(char *frame_tx, unsigned int len_command) {
 	i = 0;
 	do {
 		strncpy(four_bytes, commands + i, 4);
-		if (strncmp(four_bytes, "1FD3", 4) == 0) {			//DoThiPhuTai
+		if (strncmp(four_bytes, "1FD3", 4) == 0) {		//DoThiPhuTai
 			write_data(frame_tx, "1FD3", "D31F", i, 12, 0);
 			i += 12;
 		} else if (strncmp(four_bytes, "02D3", 4) == 0) {	//DoThiPhuTai

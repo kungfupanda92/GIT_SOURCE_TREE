@@ -7,6 +7,7 @@ extern _system_flag system_flag;
 //*****-----*****-----
 int main(void) {
 	int temp_var;
+	char time_current[11];
 	unsigned char counter_reset_gprs;
 	//*****-----*****-----*****-----*****-----
 	init_VIC();
@@ -16,13 +17,14 @@ int main(void) {
 	gpio_config();
 	initUart0(1200); 	//Initialize Uart0
 	initUart1(9600);	//Initialize Uart1
-	
+
 	//--------------------------------
 	init_Watchdog();	//Init & Start WDT - TimeOut ~= 310 Second
 	//--------------------------------
 	var_start();
 	//--------------------------------
 	//printf("hello baby\r");
+
 	ON_OFF_mudule_GPRS();
 	clear_watchdog();
 	read_para();		//load para from metter: ID, IP, PORT, APN
@@ -42,6 +44,12 @@ int main(void) {
 		counter_reset_gprs = 0;			//clear counter in the main loop
 		/*----Process when can not send data to server--------------------------------------
 		 ----------------------------------------------------------------------------------*/
+		if (system_flag.bits.SEND_ERROR) {
+			sprintf(time_current, "%02u%02u%02u%02u%02u", (uint8_t)(YEAR - 2000),
+					MONTH, DOM, HOUR, MIN);
+			save_time_offline(time_current);
+		}
+
 		while (system_flag.bits.SEND_ERROR || system_flag.bits.RESET_CONFIG) {
 			if (system_flag.bits.RESET_CONFIG)
 				system_flag.bits.RESET_CONFIG = 0;
@@ -103,13 +111,13 @@ void gpio_config(void) {
 	//GPIO_Input(GPIO_P0, GPIO_PIN_30);				//select pin is INPUT
 
 	PINSEL1 &= 0xFFFFFFFC; 							//select P0.16 is GPIO
-	GPIO_Output(GPIO_P0, GPIO_PIN_16);//Port Output, used for ON/OFF mudule GPRS
+	GPIO_Output(GPIO_P0, GPIO_PIN_16); //Port Output, used for ON/OFF mudule GPRS
 
 	//GPIO_Output(GPIO_P0, GPIO_PIN_0);				//Port Output, TX0
 	//GPIO_Output(GPIO_P0, GPIO_PIN_8);				//Port Output, TX1
 
 	PINSEL0 &= 0xCFFFFFFF; 							//select P0.14 is GPIO
-	GPIO_Output(GPIO_P0, GPIO_PIN_14);//Port Output, --> control Power for MAX705
+	GPIO_Output(GPIO_P0, GPIO_PIN_14); //Port Output, --> control Power for MAX705
 	GPIO_WriteBit(GPIO_P0, GPIO_PIN_14, 0); 		//--> Power_Off for MAX705
 
 	PINSEL1 &= 0xFFFFFFCF; 							//select P0.18 is GPIO

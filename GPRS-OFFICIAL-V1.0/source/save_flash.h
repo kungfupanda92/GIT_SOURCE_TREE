@@ -16,6 +16,10 @@ uint8_t read_freeze_frame(_RTC_time Time_server, char *return_buff);
 
 uint8_t check_id(void);
 
+void save_time_offline(char* time_off);
+
+void read_time_offline(char * return_buff);
+
 uint32_t errase_day_old(void);
 
 uint8_t compare_date(_RTC_time day1, _RTC_time day2);

@@ -6,10 +6,33 @@ extern _uart1_rx_frame uart1_rx;
 extern char buf_send_server[MAX_BUFFER_TX];
 extern PARA_PLC para_plc;
 extern CONFIG_NEWWORK config_network;
+
+extern char buff_rssi[5];
 //-------------------------------------------------------------------------------------------------
 void answer_server(void);
 void restart_gprs(void);
 //-------------------------------------------------------------------------------------------------
+
+void get_RSSI_signal(void) {
+	char *ptr_data;
+
+	if (system_flag.bits.GET_RSSI == 0)
+		return;
+
+	system_flag.bits.GET_RSSI = 0;	//clear flag
+
+	prepare_command_gprs(UART_WAIT_COMMAND_RESPONSE, '+');
+	printf("AT+CSQ\r");
+	wait_response_command_gprs(2);
+	ptr_data = strstr(uart1_rx.buffer_rx.buf_response_command, "+CSQ:");
+	if (ptr_data != NULL) {
+		buff_rssi[0] = *(ptr_data + 6);
+		buff_rssi[1] = *(ptr_data + 7);
+		buff_rssi[2] = 0;
+	}
+}
+//-------------------------------------------------------------------------------------------------
+
 bool ON_OFF_mudule_GPRS(void) {
 	unsigned char i, j;
 	restart_gprs();
@@ -454,7 +477,7 @@ void process_data_rx_from_server(char *data_server, unsigned char control_code) 
 		process_server_readtime_module(ptr);
 		answer_server();
 		break;
-	
+
 	default:
 		break;
 	}

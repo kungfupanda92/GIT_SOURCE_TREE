@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "read_para.h"
 
-#define LEN_BUFF_FREEZE		246
+#define LEN_BUFF_FREEZE		248
 #define MAX_BUFFER					1000
 #define MAX_BUFFER_RX				1000
 #define MAX_BUFFER_TX 				1000
@@ -61,6 +61,7 @@ typedef struct {
 	uint32_t timer_delay;
 	uint32_t timer_send_socket;
 	uint32_t timer_wait_response_login;
+	uint8_t  timer_get_rssi;
 } _program_counter;
 //=============================================================================
 typedef union {
@@ -75,7 +76,7 @@ typedef union {
 typedef union {
 	struct {
 		unsigned ERROR_MODULE :1;	//indicate module GPRS is not working
-		unsigned NO_SIMCARD :1;	//indicate the SIM_CART not attach the module GPRS
+		unsigned GET_RSSI :1;
 		unsigned CONNECT_OK :1;		//indicate connect to server ok
 		unsigned SEND_LOGIN :1;		//send data to login server (A1_Command)
 

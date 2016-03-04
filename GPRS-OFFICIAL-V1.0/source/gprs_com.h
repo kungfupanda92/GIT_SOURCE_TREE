@@ -51,6 +51,7 @@
 #define COMMAND_SYN_TIME_MODULE						0x06
 #define COMMAND_READ_TIME_MODULE					0x01
 //---------------------------------------------------------------------------------------------------
+void get_RSSI_signal(void);
 bool ON_OFF_mudule_GPRS(void);
 void prepare_command_gprs(unsigned char process, char header_rx);
 unsigned char wait_response_command_gprs (unsigned char second);

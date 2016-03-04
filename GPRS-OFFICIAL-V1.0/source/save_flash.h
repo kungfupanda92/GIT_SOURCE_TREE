@@ -18,7 +18,7 @@ uint8_t check_id(void);
 
 void save_time_offline(char* time_off);
 
-void read_time_offline(char * return_buff);
+void read_time_offline(char * return_buff, unsigned char mode) ;
 
 uint32_t errase_day_old(void);
 

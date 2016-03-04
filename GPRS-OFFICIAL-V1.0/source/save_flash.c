@@ -242,25 +242,22 @@ uint32_t check_add_current(_RTC_time day_current) {
 	}
 	return 0;
 }
-void read_time_offline(char * return_buff) {
+void read_time_offline(char * return_buff, unsigned char mode) {
 	char string_data[4];
 	uint8_t * ptr_add;
-	uint16_t  i;
+	uint16_t i;
 	ptr_add = (unsigned char*) 0x7000;
 
-	sprintf(string_data, "%02X", *(ptr_add + 11));
-	strcat(return_buff, string_data);
-	sprintf(string_data, "%02X", *(ptr_add + 12));
-	strcat(return_buff, string_data);
-
-	strcat(return_buff, "3380");
-
-//	time_loop = (total_times > 9) ? 10 : total_times;
-//	time_loop *= 5;
-
-	for (i = 0; i < 50; i++) {
-		sprintf(string_data, "%02X", *(ptr_add + i + 13));
+	if (mode == 0) {
+		sprintf(string_data, "%02X", *(ptr_add + 11));
 		strcat(return_buff, string_data);
+		sprintf(string_data, "%02X", *(ptr_add + 12));
+		strcat(return_buff, string_data);
+	} else if (mode == 1) {
+		for (i = 0; i < 50; i++) {
+			sprintf(string_data, "%02X", *(ptr_add + i + 13));
+			strcat(return_buff, string_data);
+		}
 	}
 
 }
@@ -317,10 +314,11 @@ uint8_t check_id(void) {
 			return 0;
 		}
 	}
-	if (*(ptr_add + 10) == 1)
-		rtc_flag.bits.mode_save_one_hour = 1;
-	else
-		rtc_flag.bits.mode_save_one_hour = 0;
+//	if (*(ptr_add + 10) == 1)
+//		rtc_flag.bits.mode_save_one_hour = 1;
+//	else
+//		rtc_flag.bits.mode_save_one_hour = 0;
+	rtc_flag.bits.mode_save_one_hour = 0;
 
 	low = *(ptr_add + 11);
 	high = *(ptr_add + 12);

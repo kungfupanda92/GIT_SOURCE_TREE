@@ -5,6 +5,7 @@
 extern _rtc_flag rtc_flag;
 extern __attribute ((aligned(32))) char my_bl_data[256];
 extern unsigned int total_times;
+extern char buff_rssi[5];
 
 extern char buffer_PLC[MAX_BUFFER];
 extern char commands[COMMANDS];
@@ -373,12 +374,10 @@ unsigned char process_server_reading_data_save(char *data_server) {
 //---------------------------------------------------------------------------------------
 unsigned char process_server_syntime_module(char *data_server) {
 	char *ptr;
-	unsigned int i ;
 	char string_lenght[4];
 	unsigned char time1, time2;
 	unsigned char second, minute, hour, date, month, year;
 	char code_str[10];
-	uint8_t * ptr_add;
 
 	ptr = data_server;	//change pointer
 
@@ -395,29 +394,29 @@ unsigned char process_server_syntime_module(char *data_server) {
 	strncat(code_str, ptr + 34, 8);
 
 	if (strstr(code_str, "1688")) {	//Setup time free_zone
-		ptr_add = (unsigned char*) 0x7000;
-		if (strstr(code_str, "3000")) {
-			rtc_flag.bits.mode_save_one_hour = 0;
-			StringToHex(my_bl_data, para_plc._ID);
-			my_bl_data[10] = 0;
-			for (i = 0; i < 52; i++) {
-				my_bl_data[i + 11] = *(ptr_add + i + 11);
-			}
-
-			iap_Erase_sector(1, 7);
-			iap_Write(0x7000);
-		} else {
-			rtc_flag.bits.mode_save_one_hour = 1;
-			StringToHex(my_bl_data, para_plc._ID);
-			my_bl_data[10] = 1;
-			for (i = 0; i < 52; i++) {
-				my_bl_data[i + 11] = *(ptr_add + i + 11);
-			}
-
-			iap_Erase_sector(1, 7);
-			iap_Write(0x7000);
-
-		}
+//		ptr_add = (unsigned char*) 0x7000;
+//		if (strstr(code_str, "3000")) {
+//			rtc_flag.bits.mode_save_one_hour = 0;	//setup 30 minute
+//			StringToHex(my_bl_data, para_plc._ID);
+//			my_bl_data[10] = 0;
+//			for (i = 0; i < 52; i++) {
+//				my_bl_data[i + 11] = *(ptr_add + i + 11);
+//			}
+//
+//			iap_Erase_sector(1, 7);
+//			iap_Write(0x7000);
+//		} else {
+//			rtc_flag.bits.mode_save_one_hour = 1;	//setup 60 minute
+//			StringToHex(my_bl_data, para_plc._ID);
+//			my_bl_data[10] = 1;
+//			for (i = 0; i < 52; i++) {
+//				my_bl_data[i + 11] = *(ptr_add + i + 11);
+//			}
+//
+//			iap_Erase_sector(1, 7);
+//			iap_Write(0x7000);
+//
+//		}
 		strcat(buf_send_server, "0000168800"); //data
 	} else if (strstr(code_str, "3080")) {	//syntime module
 		//Check Time from server
@@ -474,11 +473,78 @@ unsigned char process_server_syntime_module(char *data_server) {
 	return true;
 }
 //---------------------------------------------------------------------------------------
+void process_commands(char *data) {
+	char code_str[5];
+	unsigned int len, _index;
+	char tem_data[15];
+
+	len = strlen(commands);
+	_index = 0;
+	do {
+		strncpy(code_str, commands + _index, 4);
+		code_str[4] = 0;
+		strcat(buf_send_server, code_str);
+		if (strstr(code_str, "3080")) {	//read time module
+			//prepare time
+			tem_data[0] = (SEC / 10) + 0x30;
+			tem_data[1] = (SEC % 10) + 0x30;
+
+			tem_data[2] = (MIN / 10) + 0x30;
+			tem_data[3] = (MIN % 10) + 0x30;
+
+			tem_data[4] = (HOUR / 10) + 0x30;
+			tem_data[5] = (HOUR % 10) + 0x30;
+
+			tem_data[6] = (DOM / 10) + 0x30;
+			tem_data[7] = (DOM % 10) + 0x30;
+
+			tem_data[8] = (MONTH / 10) + 0x30;
+			tem_data[9] = (MONTH % 10) + 0x30;
+
+			tem_data[10] = ((YEAR - 2000) / 10) + 0x30;
+			tem_data[11] = ((YEAR - 2000) % 10) + 0x30;
+
+			tem_data[12] = 0;
+
+//			strcat(buf_send_server, "1000"); //length data Tx (16 bytes)
+//			strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+			strncat(buf_send_server, tem_data, 12); //data of rx frame
+		} else if (strstr(code_str, "1688")) { //Doc chu ky chot data
+//			strcat(buf_send_server, "0C00"); //length data Tx (16 bytes)
+//			strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+
+			if (rtc_flag.bits.mode_save_one_hour == 1) {
+				strcat(buf_send_server, "0001"); //data - 60p
+			} else {
+				strcat(buf_send_server, "3000"); //data - 30p
+			}
+		} else if (strstr(code_str, "0988")) {
+//			strcat(buf_send_server, "1600");
+//			strncat(buf_send_server, ptr + 22, 20); //data of rx frame
+			strcat(buf_send_server, "0100030316207777"); //virsion FW GPRS
+//			strcat(buf_send_server, "0A88"); //code HW
+//			strcat(buf_send_server, "0601"); //virsion HW GPRS
+		} else if (strstr(code_str, "0A88")) { //code HW
+			strcat(buf_send_server, "0601"); //virsion HW GPRS
+		} else if (strstr(code_str, "3180")) { //read RSSI
+			//strcat(buf_send_server, "16");
+
+			strncat(buf_send_server, buff_rssi, 2);
+		} else if (strstr(code_str, "3280")) { //read total_offline
+			read_time_offline(buf_send_server, 0);
+		} else if (strstr(code_str, "3380")) { //date_offline
+			read_time_offline(buf_send_server, 1);
+		}
+
+		_index += 4;
+	} while (_index < len);
+}
 unsigned char process_server_readtime_module(char *data_server) {
 	char *ptr;
+	unsigned int len, i;
 	char string_lenght[4];
-	char tem_data[15];
-	char code_str[5];
+
+	WORD_UNSIGNED length_data;
 
 	ptr = data_server;	//change pointer
 
@@ -489,61 +555,29 @@ unsigned char process_server_readtime_module(char *data_server) {
 	strncat(buf_send_server, ptr + CHECKCOUNT_POS, 4);	//checkcount
 	strcat(buf_send_server, "68");	//restart code
 	strcat(buf_send_server, "81");	//control code
+	strcat(buf_send_server, "0000"); //length data Tx (temp: for it = 0000)
+	strncat(buf_send_server, ptr + 22, 16); //data of rx frame
 
-	code_str[0] = 0;
-	strncat(code_str, ptr + 38, 4);
-	if (strstr(code_str, "3080")) {	//read time module
-		//prepare time
-		tem_data[0] = (SEC / 10) + 0x30;
-		tem_data[1] = (SEC % 10) + 0x30;
+	//=================
+	length_data.byte.byte0 = convert_string2hex(ptr + LENG_POS); // byte LSB
+	length_data.byte.byte1 = convert_string2hex(ptr + LENG_POS + 2); // byte MSB
 
-		tem_data[2] = (MIN / 10) + 0x30;
-		tem_data[3] = (MIN % 10) + 0x30;
+	commands[0] = 0;
+	strncpy(commands, ptr + 38, (length_data.val * 2) - 16); // reading code
+	commands[(length_data.val * 2) - 16] = 0;
+	len = strlen(commands);
 
-		tem_data[4] = (HOUR / 10) + 0x30;
-		tem_data[5] = (HOUR % 10) + 0x30;
+	process_commands(buf_send_server);
 
-		tem_data[6] = (DOM / 10) + 0x30;
-		tem_data[7] = (DOM % 10) + 0x30;
+	//=================
 
-		tem_data[8] = (MONTH / 10) + 0x30;
-		tem_data[9] = (MONTH % 10) + 0x30;
-
-		tem_data[10] = ((YEAR - 2000) / 10) + 0x30;
-		tem_data[11] = ((YEAR - 2000) % 10) + 0x30;
-
-		tem_data[12] = 0;
-
-		strcat(buf_send_server, "1000"); //length data Tx (16 bytes)
-		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		strncat(buf_send_server, tem_data, 12); //data of rx frame
-	} else if (strstr(code_str, "1688")) { //Doc chu ky chot data
-		strcat(buf_send_server, "0C00"); //length data Tx (16 bytes)
-		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-
-		if (rtc_flag.bits.mode_save_one_hour == 1) {
-			strcat(buf_send_server, "0001"); //data - 60p
-		} else {
-			strcat(buf_send_server, "3000"); //data - 30p
-		}
-	} else if (strstr(code_str, "0988")) {
-		strcat(buf_send_server, "1600");
-		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		strcat(buf_send_server, "0100230216200000"); //virsion FW GPRS
-		strcat(buf_send_server, "0A88"); //code HW
-		strcat(buf_send_server, "0601"); //virsion HW GPRS
-	} else if (strstr(code_str, "3280")) {
-//		if (total_times < 10) {
-//			sprintf(string_lenght, "%02X", 5 * total_times + 14);
-//		} else {
-//			sprintf(string_lenght, "%02X", 50 + 14);
-//		}
-		sprintf(string_lenght, "%02X", 50 + 14);
-		strcat(buf_send_server, string_lenght);
-		strcat(buf_send_server, "00");
-		strncat(buf_send_server, ptr + 22, 20); //data of rx frame
-		read_time_offline(buf_send_server);
+	len = (strlen(buf_send_server) - 22) / 2;
+	sprintf(string_lenght, "%04X", len);
+	for (i = 0; i < 4; i += 2) {
+		buf_send_server[i + 18] = string_lenght[3 - i - 1];
+		buf_send_server[i + 19] = string_lenght[3 - i];
 	}
+	//=================
 
 	sprintf(string_lenght, "%02X", caculate_checksum(buf_send_server));
 	strcat(buf_send_server, string_lenght);

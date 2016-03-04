@@ -42,14 +42,15 @@ int main(void) {
 	while (1) {
 		temp_var = 0;
 		counter_reset_gprs = 0;			//clear counter in the main loop
-		/*----Process when can not send data to server--------------------------------------
-		 ----------------------------------------------------------------------------------*/
+		//---------------------Check & Save offline time -----------------------------------
 		if (system_flag.bits.SEND_ERROR) {
 			sprintf(time_current, "%02u%02u%02u%02u%02u", (uint8_t)(YEAR - 2000),
 					MONTH, DOM, HOUR, MIN);
 			save_time_offline(time_current);
 		}
-
+		//----------------------------------------------------------------------------------
+		/*----Process when can not send data to server--------------------------------------
+		----------------------------------------------------------------------------------*/
 		while (system_flag.bits.SEND_ERROR || system_flag.bits.RESET_CONFIG) {
 			if (system_flag.bits.RESET_CONFIG)
 				system_flag.bits.RESET_CONFIG = 0;
@@ -95,6 +96,8 @@ int main(void) {
 		check_freeze_data();
 		clear_watchdog();
 		send_data_to_server();
+
+		get_RSSI_signal();
 	}
 }
 //----------------------------------------------------------------------------------------

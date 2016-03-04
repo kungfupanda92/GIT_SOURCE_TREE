@@ -30,6 +30,12 @@ __irq void myTimer0_ISR(void) {
 	program_counter.timer_send_socket++;
 	program_counter.timer_delay++;
 	program_counter.timer_wait_response_login++;
+	program_counter.timer_get_rssi++;
+
+	if (program_counter.timer_get_rssi >= 200){//50ms ngat 1 lan
+		program_counter.timer_get_rssi = 0;
+		system_flag.bits.GET_RSSI = 1;
+	}
 
 	if (program_counter.timer_send_socket >= 20 * TIME_SEND_SOCKET) {
 		program_counter.timer_send_socket = 0;
